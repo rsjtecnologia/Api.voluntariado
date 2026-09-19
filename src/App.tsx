@@ -1,1143 +1,1026 @@
 import { useState } from 'react';
-import { voluntarios, pastorais, eventos, termos, templates, auditoriaLogs, funcoes, comunidades, paroquia } from './data/mockData';
-import { Termo, StatusTermo, TipoTermo, TipoAuditoria } from './data/types';
+import { angularStructure, angularCore, angularFeatures, angularShared, angularEnvironment } from './data/angularCode';
+import { laravelStructure, laravelRoutes, laravelModels, laravelControllers, laravelServices, laravelMigrations, laravelConfig } from './data/laravelCode';
 
-// ==================== UTILITY FUNCTIONS ====================
-function getStatusColor(status: StatusTermo): string {
-  const colors: Record<StatusTermo, string> = {
-    RASCUNHO: 'bg-gray-100 text-gray-700',
-    GERADO: 'bg-blue-100 text-blue-700',
-    AGUARDANDO_ASSINATURA: 'bg-yellow-100 text-yellow-700',
-    ASSINATURA_EM_ANDAMENTO: 'bg-blue-100 text-blue-700',
-    ASSINADO: 'bg-green-100 text-green-700',
-    RECUSADO: 'bg-red-100 text-red-700',
-    CANCELADO: 'bg-gray-100 text-gray-700',
-    EXPIRADO: 'bg-gray-800 text-white',
-    ERRO_ASSINATURA: 'bg-orange-100 text-orange-700',
-  };
-  return colors[status] || 'bg-gray-100 text-gray-700';
-}
+type Page = 'overview' | 'angular' | 'laravel' | 'database' | 'api' | 'govbr' | 'security' | 'install';
 
-function getStatusIcon(status: StatusTermo): string {
-  const icons: Record<StatusTermo, string> = {
-    RASCUNHO: '📝', GERADO: '📄', AGUARDANDO_ASSINATURA: '🟡',
-    ASSINATURA_EM_ANDAMENTO: '🔵', ASSINADO: '🟢', RECUSADO: '🔴',
-    CANCELADO: '⛔', EXPIRADO: '⚫', ERRO_ASSINATURA: '⚠️',
-  };
-  return icons[status] || '📄';
-}
-
-function getAuditoriaLabel(acao: TipoAuditoria): string {
-  const labels: Record<TipoAuditoria, string> = {
-    TERMO_CRIADO: 'Termo Criado', TERMO_GERADO: 'Termo Gerado',
-    ASSINATURA_SOLICITADA: 'Assinatura Solicitada', ASSINATURA_INICIADA: 'Assinatura Iniciada',
-    TERMO_ASSINADO: 'Termo Assinado', TERMO_RECUSADO: 'Termo Recusado',
-    TERMO_CANCELADO: 'Termo Cancelado', TERMO_EXPIRADO: 'Termo Expirado',
-    TERMO_RENOVADO: 'Termo Renovado', DOCUMENTO_DOWNLOAD: 'Download Documento',
-    TEMPLATE_CRIADO: 'Template Criado', TEMPLATE_ATUALIZADO: 'Template Atualizado',
-    VOLUNTARIO_CRIADO: 'Voluntário Criado', VOLUNTARIO_ATUALIZADO: 'Voluntário Atualizado',
-  };
-  return labels[acao] || acao;
-}
-
-function getVoluntarioNome(id: string): string {
-  return voluntarios.find(v => v.id === id)?.nomeCompleto || 'N/A';
-}
-
-function getPastoralNome(id?: string): string {
-  if (!id) return 'N/A';
-  return pastorais.find(p => p.id === id)?.nome || 'N/A';
-}
-
-function getEventoNome(id?: string): string {
-  if (!id) return 'N/A';
-  return eventos.find(e => e.id === id)?.nome || 'N/A';
-}
-
-function formatDate(date: string): string {
-  if (!date) return '-';
-  const d = new Date(date + 'T00:00:00');
-  return d.toLocaleDateString('pt-BR');
-}
-
-// ==================== ICONS (SVG Components) ====================
-function IconDashboard() { return <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>; }
-function IconUsers() { return <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" /></svg>; }
-function IconChurch() { return <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>; }
-function IconCalendar() { return <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>; }
-function IconDocument() { return <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>; }
-function IconTemplate() { return <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zm0 8a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zm10 0a1 1 0 011-1h4a1 1 0 011 1v6a1 1 0 01-1 1h-4a1 1 0 01-1-1v-6z" /></svg>; }
-function IconShield() { return <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>; }
-function IconHistory() { return <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>; }
-function IconArchitecture() { return <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" /></svg>; }
-function IconBell() { return <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>; }
-function IconCheck() { return <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>; }
-function IconSearch() { return <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>; }
-
-// ==================== MAIN APP ====================
 export default function App() {
-  const [currentPage, setCurrentPage] = useState('dashboard');
+  const [currentPage, setCurrentPage] = useState<Page>('overview');
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [selectedTermo, setSelectedTermo] = useState<Termo | null>(null);
-  const [showTermoDetail, setShowTermoDetail] = useState(false);
+  const [activeFile, setActiveFile] = useState<string>('');
 
-  const menuItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: <IconDashboard /> },
-    { id: 'voluntarios', label: 'Voluntários', icon: <IconUsers /> },
-    { id: 'pastorais', label: 'Pastorais', icon: <IconChurch /> },
-    { id: 'eventos', label: 'Eventos', icon: <IconCalendar /> },
-    { id: 'termos', label: 'Termos', icon: <IconDocument /> },
-    { id: 'templates', label: 'Templates', icon: <IconTemplate /> },
-    { id: 'validacao', label: 'Validação', icon: <IconShield /> },
-    { id: 'auditoria', label: 'Auditoria', icon: <IconHistory /> },
-    { id: 'arquitetura', label: 'Arquitetura', icon: <IconArchitecture /> },
+  const menuItems: { id: Page; label: string; icon: string; section?: string }[] = [
+    { id: 'overview', label: 'Visão Geral', icon: '🏠', section: 'DOCUMENTAÇÃO' },
+    { id: 'angular', label: 'Frontend Angular', icon: '🅰️', section: 'CÓDIGO-FONTE' },
+    { id: 'laravel', label: 'Backend Laravel', icon: '🔺' },
+    { id: 'database', label: 'Banco de Dados', icon: '🗄️' },
+    { id: 'api', label: 'API REST', icon: '🌐' },
+    { id: 'govbr', label: 'Integração gov.br', icon: '🔐', section: 'INTEGRAÇÕES' },
+    { id: 'security', label: 'Segurança & LGPD', icon: '🛡️' },
+    { id: 'install', label: 'Instalação', icon: '⚙️', section: 'DEPLOY' },
   ];
 
-  const renderPage = () => {
-    switch (currentPage) {
-      case 'dashboard': return <DashboardPage onNavigate={setCurrentPage} onSelectTermo={(t) => { setSelectedTermo(t); setShowTermoDetail(true); }} />;
-      case 'voluntarios': return <VoluntariosPage />;
-      case 'pastorais': return <PastoraisPage />;
-      case 'eventos': return <EventosPage />;
-      case 'termos': return <TermosPage onSelectTermo={(t) => { setSelectedTermo(t); setShowTermoDetail(true); }} />;
-      case 'templates': return <TemplatesPage />;
-      case 'validacao': return <ValidacaoPage />;
-      case 'auditoria': return <AuditoriaPage />;
-      case 'arquitetura': return <ArquiteturaPage />;
-      default: return <DashboardPage onNavigate={setCurrentPage} onSelectTermo={(t) => { setSelectedTermo(t); setShowTermoDetail(true); }} />;
-    }
-  };
-
   return (
-    <div className="flex h-screen bg-gray-50 overflow-hidden">
+    <div className="flex h-screen bg-slate-50 overflow-hidden">
       {/* Sidebar */}
-      <aside className={`${sidebarOpen ? 'w-64' : 'w-20'} bg-white border-r border-gray-200 flex flex-col transition-all duration-300 flex-shrink-0`}>
-        {/* Logo */}
-        <div className="p-4 border-b border-gray-200">
+      <aside className={`${sidebarOpen ? 'w-64' : 'w-16'} bg-white border-r border-slate-200 flex flex-col transition-all duration-300 flex-shrink-0`}>
+        <div className="p-4 border-b border-slate-200">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-primary-600 rounded-lg flex items-center justify-center flex-shrink-0">
-              <span className="text-white text-lg font-bold">✝</span>
+            <div className="w-9 h-9 bg-gradient-to-br from-primary-600 to-primary-800 rounded-lg flex items-center justify-center flex-shrink-0">
+              <span className="text-white text-sm font-bold">✝</span>
             </div>
             {sidebarOpen && (
               <div className="overflow-hidden">
-                <h1 className="text-sm font-bold text-gray-800 leading-tight">Voluntariado</h1>
-                <p className="text-xs text-gray-500">Paroquial</p>
+                <h1 className="text-xs font-bold text-slate-800 leading-tight">Voluntariado Paroquial</h1>
+                <p className="text-[10px] text-slate-500">Angular + Laravel</p>
               </div>
             )}
           </div>
         </div>
-        {/* Menu */}
-        <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
-          {menuItems.map(item => (
-            <button
-              key={item.id}
-              onClick={() => setCurrentPage(item.id)}
-              className={`sidebar-link w-full ${currentPage === item.id ? 'active' : 'text-gray-600 hover:text-primary-700'}`}
-            >
-              {item.icon}
-              {sidebarOpen && <span>{item.label}</span>}
-            </button>
+        <nav className="flex-1 p-2 space-y-0.5 overflow-y-auto">
+          {menuItems.map((item, idx) => (
+            <div key={item.id}>
+              {item.section && (
+                <div className="sidebar-section mt-3 first:mt-0">{sidebarOpen ? item.section : ''}</div>
+              )}
+              <button
+                onClick={() => { setCurrentPage(item.id); setActiveFile(''); }}
+                className={`sidebar-link w-full text-left ${currentPage === item.id ? 'active' : 'text-slate-600'}`}
+              >
+                <span className="text-base flex-shrink-0">{item.icon}</span>
+                {sidebarOpen && <span className="truncate">{item.label}</span>}
+              </button>
+            </div>
           ))}
         </nav>
-        {/* Footer */}
         {sidebarOpen && (
-          <div className="p-4 border-t border-gray-200">
-            <div className="text-xs text-gray-500">
-              <p className="font-medium text-gray-700">{paroquia.nome}</p>
-              <p>Administração</p>
+          <div className="p-3 border-t border-slate-200">
+            <div className="flex gap-2">
+              <span className="badge bg-red-100 text-red-700 text-[10px]">Angular 17</span>
+              <span className="badge bg-orange-100 text-orange-700 text-[10px]">Laravel 11</span>
             </div>
           </div>
         )}
       </aside>
 
-      {/* Main Content */}
+      {/* Main */}
       <main className="flex-1 flex flex-col overflow-hidden">
-        {/* Header */}
-        <header className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between flex-shrink-0">
-          <div className="flex items-center gap-4">
-            <button onClick={() => setSidebarOpen(!sidebarOpen)} className="text-gray-500 hover:text-gray-700">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
+        <header className="bg-white border-b border-slate-200 px-6 py-3 flex items-center justify-between flex-shrink-0">
+          <div className="flex items-center gap-3">
+            <button onClick={() => setSidebarOpen(!sidebarOpen)} className="text-slate-400 hover:text-slate-600">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
             </button>
-            <h2 className="text-lg font-semibold text-gray-800">
-              {menuItems.find(m => m.id === currentPage)?.label || 'Dashboard'}
+            <h2 className="text-base font-semibold text-slate-800">
+              {menuItems.find(m => m.id === currentPage)?.icon} {menuItems.find(m => m.id === currentPage)?.label}
             </h2>
           </div>
-          <div className="flex items-center gap-4">
-            <button className="relative text-gray-500 hover:text-gray-700">
-              <IconBell />
-              <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">3</span>
-            </button>
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center">
-                <span className="text-primary-700 text-sm font-medium">AP</span>
-              </div>
-              {sidebarOpen && <span className="text-sm text-gray-700 font-medium">Admin Paróquia</span>}
-            </div>
+          <div className="flex items-center gap-2 text-xs text-slate-500">
+            <span className="badge bg-slate-100 text-slate-600">v1.0.0</span>
+            <span>Documentação Técnica</span>
           </div>
         </header>
 
-        {/* Page Content */}
-        <div className="flex-1 overflow-y-auto p-6">
-          {renderPage()}
+        <div className="flex-1 overflow-y-auto">
+          <div className="max-w-6xl mx-auto p-6">
+            {currentPage === 'overview' && <OverviewPage />}
+            {currentPage === 'angular' && <AngularPage activeFile={activeFile} setActiveFile={setActiveFile} />}
+            {currentPage === 'laravel' && <LaravelPage activeFile={activeFile} setActiveFile={setActiveFile} />}
+            {currentPage === 'database' && <DatabasePage />}
+            {currentPage === 'api' && <ApiPage />}
+            {currentPage === 'govbr' && <GovBrPage />}
+            {currentPage === 'security' && <SecurityPage />}
+            {currentPage === 'install' && <InstallPage />}
+          </div>
         </div>
       </main>
-
-      {/* Termo Detail Modal */}
-      {showTermoDetail && selectedTermo && (
-        <TermoDetailModal termo={selectedTermo} onClose={() => setShowTermoDetail(false)} />
-      )}
     </div>
   );
 }
 
-// ==================== DASHBOARD PAGE ====================
-function DashboardPage({ onNavigate, onSelectTermo }: { onNavigate: (page: string) => void; onSelectTermo: (t: Termo) => void }) {
-  const totalVoluntarios = voluntarios.filter(v => v.status === 'ATIVO').length;
-  const termosAssinados = termos.filter(t => t.status === 'ASSINADO').length;
-  const termosAguardando = termos.filter(t => t.status === 'AGUARDANDO_ASSINATURA' || t.status === 'ASSINATURA_EM_ANDAMENTO').length;
-  const termosVencidos = termos.filter(t => t.status === 'EXPIRADO').length;
-  const termosProxVencimento = 2; // Simulado
-  const termosRecusados = termos.filter(t => t.status === 'RECUSADO').length;
-  const eventosAtivos = eventos.filter(e => e.status === 'ATIVO' || e.status === 'PLANEJAMENTO').length;
-
-  return (
-    <div className="space-y-6">
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard title="Voluntários Ativos" value={totalVoluntarios} icon="👥" color="bg-blue-50 border-blue-200" onClick={() => onNavigate('voluntarios')} />
-        <StatCard title="Termos Assinados" value={termosAssinados} icon="✅" color="bg-green-50 border-green-200" onClick={() => onNavigate('termos')} />
-        <StatCard title="Aguardando Assinatura" value={termosAguardando} icon="🟡" color="bg-yellow-50 border-yellow-200" onClick={() => onNavigate('termos')} />
-        <StatCard title="Eventos Ativos" value={eventosAtivos} icon="📅" color="bg-purple-50 border-purple-200" onClick={() => onNavigate('eventos')} />
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard title="Próx. Vencimento" value={termosProxVencimento} icon="⏰" color="bg-orange-50 border-orange-200" />
-        <StatCard title="Termos Vencidos" value={termosVencidos} icon="⚫" color="bg-gray-50 border-gray-200" />
-        <StatCard title="Termos Recusados" value={termosRecusados} icon="🔴" color="bg-red-50 border-red-200" />
-        <StatCard title="Pastorais Ativas" value={pastorais.filter(p => p.status === 'ATIVA').length} icon="⛪" color="bg-indigo-50 border-indigo-200" onClick={() => onNavigate('pastorais')} />
-      </div>
-
-      {/* Charts Area */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Termos por Status */}
-        <div className="card p-6">
-          <h3 className="text-sm font-semibold text-gray-800 mb-4">Termos por Status</h3>
-          <div className="space-y-3">
-            {(['ASSINADO', 'AGUARDANDO_ASSINATURA', 'ASSINATURA_EM_ANDAMENTO', 'RASCUNHO', 'GERADO', 'RECUSADO', 'EXPIRADO'] as StatusTermo[]).map(status => {
-              const count = termos.filter(t => t.status === status).length;
-              if (count === 0) return null;
-              const percentage = (count / termos.length) * 100;
-              return (
-                <div key={status} className="flex items-center gap-3">
-                  <span className="text-sm w-40 truncate">{getStatusIcon(status)} {status.replace(/_/g, ' ')}</span>
-                  <div className="flex-1 bg-gray-100 rounded-full h-3">
-                    <div className="h-3 rounded-full bg-primary-500 transition-all" style={{ width: `${percentage}%` }}></div>
-                  </div>
-                  <span className="text-sm font-medium text-gray-600 w-8 text-right">{count}</span>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Voluntários por Pastoral */}
-        <div className="card p-6">
-          <h3 className="text-sm font-semibold text-gray-800 mb-4">Voluntários por Pastoral</h3>
-          <div className="space-y-3">
-            {pastorais.map(pastoral => {
-              const count = voluntarios.filter(v => v.pastoralId === pastoral.id && v.status === 'ATIVO').length;
-              if (count === 0) return null;
-              const percentage = (count / totalVoluntarios) * 100;
-              return (
-                <div key={pastoral.id} className="flex items-center gap-3">
-                  <span className="text-sm w-40 truncate">{pastoral.nome}</span>
-                  <div className="flex-1 bg-gray-100 rounded-full h-3">
-                    <div className="h-3 rounded-full bg-church-500 transition-all" style={{ width: `${percentage}%` }}></div>
-                  </div>
-                  <span className="text-sm font-medium text-gray-600 w-8 text-right">{count}</span>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </div>
-
-      {/* Recent Activity & Alerts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Recent Terms */}
-        <div className="card p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-semibold text-gray-800">Termos Recentes</h3>
-            <button onClick={() => onNavigate('termos')} className="text-xs text-primary-600 hover:text-primary-700 font-medium">Ver todos →</button>
-          </div>
-          <div className="space-y-3">
-            {termos.slice(0, 5).map(termo => (
-              <button key={termo.id} onClick={() => onSelectTermo(termo)} className="w-full flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 transition-colors text-left">
-                <div>
-                  <p className="text-sm font-medium text-gray-800">{termo.codigo}</p>
-                  <p className="text-xs text-gray-500">{getVoluntarioNome(termo.voluntarioId)}</p>
-                </div>
-                <span className={`badge ${getStatusColor(termo.status)}`}>
-                  {getStatusIcon(termo.status)} {termo.status.replace(/_/g, ' ')}
-                </span>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Alerts */}
-        <div className="card p-6">
-          <h3 className="text-sm font-semibold text-gray-800 mb-4">⚠️ Alertas</h3>
-          <div className="space-y-3">
-            <AlertItem type="warning" message="3 termos próximos do vencimento (30 dias)" />
-            <AlertItem type="error" message="1 termo com assinatura recusada - TVP-2027-000007" />
-            <AlertItem type="info" message="2 voluntários aguardando termo para evento ativo" />
-            <AlertItem type="warning" message="Festa do Padroeiro sem todos os termos assinados" />
-            <AlertItem type="success" message="Todos os termos da Pastoral da Liturgia estão em dia" />
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function StatCard({ title, value, icon, color, onClick }: { title: string; value: number; icon: string; color: string; onClick?: () => void }) {
-  return (
-    <div className={`stat-card border ${color} ${onClick ? 'cursor-pointer hover:scale-[1.02]' : ''}`} onClick={onClick}>
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">{title}</p>
-          <p className="text-2xl font-bold text-gray-800 mt-1">{value}</p>
-        </div>
-        <span className="text-3xl">{icon}</span>
-      </div>
-    </div>
-  );
-}
-
-function AlertItem({ type, message }: { type: 'warning' | 'error' | 'info' | 'success'; message: string }) {
-  const colors = { warning: 'bg-yellow-50 border-yellow-200 text-yellow-800', error: 'bg-red-50 border-red-200 text-red-800', info: 'bg-blue-50 border-blue-200 text-blue-800', success: 'bg-green-50 border-green-200 text-green-800' };
-  const icons = { warning: '⚠️', error: '🔴', info: 'ℹ️', success: '✅' };
-  return (
-    <div className={`p-3 rounded-lg border text-sm ${colors[type]}`}>
-      <span className="mr-2">{icons[type]}</span>{message}
-    </div>
-  );
-}
-
-// ==================== VOLUNTARIOS PAGE ====================
-function VoluntariosPage() {
-  const [search, setSearch] = useState('');
-  const [showForm, setShowForm] = useState(false);
-  const filtered = voluntarios.filter(v => v.nomeCompleto.toLowerCase().includes(search.toLowerCase()) || v.cpf.includes(search));
-
-  return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="relative flex-1 max-w-md">
-          <span className="absolute left-3 top-2.5 text-gray-400"><IconSearch /></span>
-          <input type="text" placeholder="Buscar voluntário por nome ou CPF..." className="input-field pl-10" value={search} onChange={e => setSearch(e.target.value)} />
-        </div>
-        <button className="btn-primary" onClick={() => setShowForm(true)}>
-          <span className="mr-2">+</span> Novo Voluntário
-        </button>
-      </div>
-
-      <div className="card overflow-hidden">
-        <table className="w-full">
-          <thead>
-            <tr>
-              <th className="table-header">Nome</th>
-              <th className="table-header">CPF</th>
-              <th className="table-header">Pastoral</th>
-              <th className="table-header">Função</th>
-              <th className="table-header">Status</th>
-              <th className="table-header">Ações</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100">
-            {filtered.map(vol => (
-              <tr key={vol.id} className="hover:bg-gray-50">
-                <td className="table-cell font-medium">{vol.nomeCompleto}</td>
-                <td className="table-cell">{vol.cpf}</td>
-                <td className="table-cell">{getPastoralNome(vol.pastoralId)}</td>
-                <td className="table-cell">{funcoes.find(f => f.id === vol.funcaoId)?.nome || '-'}</td>
-                <td className="table-cell">
-                  <span className={`badge ${vol.status === 'ATIVO' ? 'bg-green-100 text-green-700' : vol.status === 'PENDENTE' ? 'bg-yellow-100 text-yellow-700' : 'bg-gray-100 text-gray-700'}`}>
-                    {vol.status}
-                  </span>
-                </td>
-                <td className="table-cell">
-                  <div className="flex gap-2">
-                    <button className="text-primary-600 hover:text-primary-700 text-sm">Editar</button>
-                    <button className="text-gray-500 hover:text-gray-700 text-sm">Termos</button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {showForm && <VoluntarioForm onClose={() => setShowForm(false)} />}
-    </div>
-  );
-}
-
-function VoluntarioForm({ onClose }: { onClose: () => void }) {
-  return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-        <div className="p-6 border-b border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-800">Novo Voluntário</h3>
-          <p className="text-sm text-gray-500 mt-1">Cadastro em conformidade com a LGPD - Coleta mínima de dados</p>
-        </div>
-        <div className="p-6 space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div><label className="block text-sm font-medium text-gray-700 mb-1">Nome Completo *</label><input className="input-field" placeholder="Nome completo" /></div>
-            <div><label className="block text-sm font-medium text-gray-700 mb-1">CPF *</label><input className="input-field" placeholder="000.000.000-00" /></div>
-            <div><label className="block text-sm font-medium text-gray-700 mb-1">Data de Nascimento *</label><input type="date" className="input-field" /></div>
-            <div><label className="block text-sm font-medium text-gray-700 mb-1">E-mail *</label><input type="email" className="input-field" placeholder="email@exemplo.com" /></div>
-            <div><label className="block text-sm font-medium text-gray-700 mb-1">Telefone *</label><input className="input-field" placeholder="(00) 00000-0000" /></div>
-            <div><label className="block text-sm font-medium text-gray-700 mb-1">Comunidade</label>
-              <select className="input-field"><option value="">Selecione...</option>{comunidades.map(c => <option key={c.id} value={c.id}>{c.nome}</option>)}</select>
-            </div>
-            <div><label className="block text-sm font-medium text-gray-700 mb-1">Pastoral</label>
-              <select className="input-field"><option value="">Selecione...</option>{pastorais.map(p => <option key={p.id} value={p.id}>{p.nome}</option>)}</select>
-            </div>
-            <div><label className="block text-sm font-medium text-gray-700 mb-1">Função</label>
-              <select className="input-field"><option value="">Selecione...</option>{funcoes.map(f => <option key={f.id} value={f.id}>{f.nome}</option>)}</select>
-            </div>
-          </div>
-          <div><label className="block text-sm font-medium text-gray-700 mb-1">Endereço</label><input className="input-field" placeholder="Endereço completo" /></div>
-          <div><label className="block text-sm font-medium text-gray-700 mb-1">Observações</label><textarea className="input-field" rows={3} placeholder="Observações adicionais..."></textarea></div>
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-            <p className="text-xs text-blue-700"><strong>LGPD:</strong> Os dados coletados são necessários para a gestão do voluntariado e emissão do Termo de Voluntariado. O voluntário será informado sobre a finalidade do tratamento de seus dados pessoais.</p>
-          </div>
-        </div>
-        <div className="p-6 border-t border-gray-200 flex justify-end gap-3">
-          <button className="btn-secondary" onClick={onClose}>Cancelar</button>
-          <button className="btn-primary" onClick={onClose}>Salvar Voluntário</button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ==================== PASTORAIS PAGE ====================
-function PastoraisPage() {
-  return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-gray-500">{pastorais.length} pastorais cadastradas</p>
-        <button className="btn-primary"><span className="mr-2">+</span> Nova Pastoral</button>
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {pastorais.map(pastoral => {
-          const volCount = voluntarios.filter(v => v.pastoralId === pastoral.id && v.status === 'ATIVO').length;
-          const termosCount = termos.filter(t => t.pastoralId === pastoral.id).length;
-          return (
-            <div key={pastoral.id} className="card p-5 hover:shadow-md transition-shadow">
-              <div className="flex items-start justify-between mb-3">
-                <div className="w-10 h-10 bg-primary-100 rounded-lg flex items-center justify-center">
-                  <span className="text-primary-600 text-lg">⛪</span>
-                </div>
-                <span className={`badge ${pastoral.status === 'ATIVA' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'}`}>{pastoral.status}</span>
-              </div>
-              <h3 className="font-semibold text-gray-800">{pastoral.nome}</h3>
-              <p className="text-sm text-gray-500 mt-1 line-clamp-2">{pastoral.descricao}</p>
-              <div className="mt-4 pt-3 border-t border-gray-100 space-y-1">
-                <p className="text-xs text-gray-500"><strong>Coordenador:</strong> {pastoral.coordenador}</p>
-                <p className="text-xs text-gray-500"><strong>Voluntários:</strong> {volCount}</p>
-                <p className="text-xs text-gray-500"><strong>Termos:</strong> {termosCount}</p>
-              </div>
-              <div className="mt-3 flex gap-2">
-                <button className="text-xs text-primary-600 hover:text-primary-700 font-medium">Ver detalhes</button>
-                <button className="text-xs text-primary-600 hover:text-primary-700 font-medium">Voluntários</button>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
-// ==================== EVENTOS PAGE ====================
-function EventosPage() {
-  const statusColors: Record<string, string> = { PLANEJAMENTO: 'bg-blue-100 text-blue-700', ATIVO: 'bg-green-100 text-green-700', CONCLUIDO: 'bg-gray-100 text-gray-700', CANCELADO: 'bg-red-100 text-red-700' };
-  return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-gray-500">{eventos.length} eventos cadastrados</p>
-        <button className="btn-primary"><span className="mr-2">+</span> Novo Evento</button>
-      </div>
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {eventos.map(evento => {
-          const volCount = voluntarios.filter(v => eventos.some(e => e.id === evento.id)).length;
-          return (
-            <div key={evento.id} className="card p-5 hover:shadow-md transition-shadow">
-              <div className="flex items-start justify-between mb-2">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-                    <span className="text-purple-600 text-lg">📅</span>
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-gray-800">{evento.nome}</h3>
-                    <p className="text-xs text-gray-500">{formatDate(evento.dataInicial)} {evento.dataInicial !== evento.dataFinal ? ` - ${formatDate(evento.dataFinal)}` : ''}</p>
-                  </div>
-                </div>
-                <span className={`badge ${statusColors[evento.status]}`}>{evento.status}</span>
-              </div>
-              <p className="text-sm text-gray-600 mt-2">{evento.descricao}</p>
-              <div className="mt-3 grid grid-cols-3 gap-2 text-center">
-                <div className="bg-gray-50 rounded-lg p-2">
-                  <p className="text-xs text-gray-500">Horário</p>
-                  <p className="text-xs font-medium">{evento.horario}</p>
-                </div>
-                <div className="bg-gray-50 rounded-lg p-2">
-                  <p className="text-xs text-gray-500">Local</p>
-                  <p className="text-xs font-medium truncate">{evento.local}</p>
-                </div>
-                <div className="bg-gray-50 rounded-lg p-2">
-                  <p className="text-xs text-gray-500">Coordenador</p>
-                  <p className="text-xs font-medium truncate">{evento.coordenador}</p>
-                </div>
-              </div>
-              <div className="mt-3 flex gap-2">
-                <button className="text-xs text-primary-600 hover:text-primary-700 font-medium">Gerenciar Voluntários</button>
-                <button className="text-xs text-primary-600 hover:text-primary-700 font-medium">Gerar Termos</button>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
-// ==================== TERMOS PAGE ====================
-function TermosPage({ onSelectTermo }: { onSelectTermo: (t: Termo) => void }) {
-  const [filter, setFilter] = useState<string>('TODOS');
-  const [typeFilter, setTypeFilter] = useState<string>('TODOS');
+// ==================== CODE VIEWER COMPONENT ====================
+function CodeViewer({ code, filename, language }: { code: string; filename?: string; language?: string }) {
+  const [copied, setCopied] = useState(false);
   
-  const filtered = termos.filter(t => {
-    if (filter !== 'TODOS' && t.status !== filter) return false;
-    if (typeFilter !== 'TODOS' && t.tipo !== typeFilter) return false;
-    return true;
-  });
-
-  return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div className="flex gap-3">
-          <select className="input-field w-auto" value={filter} onChange={e => setFilter(e.target.value)}>
-            <option value="TODOS">Todos os Status</option>
-            <option value="RASCUNHO">Rascunho</option>
-            <option value="GERADO">Gerado</option>
-            <option value="AGUARDANDO_ASSINATURA">Aguardando Assinatura</option>
-            <option value="ASSINATURA_EM_ANDAMENTO">Em Andamento</option>
-            <option value="ASSINADO">Assinado</option>
-            <option value="RECUSADO">Recusado</option>
-            <option value="EXPIRADO">Expirado</option>
-          </select>
-          <select className="input-field w-auto" value={typeFilter} onChange={e => setTypeFilter(e.target.value)}>
-            <option value="TODOS">Todos os Tipos</option>
-            <option value="ANUAL">Anual (Pastoral)</option>
-            <option value="EVENTO">Evento</option>
-          </select>
-        </div>
-        <div className="flex gap-2">
-          <button className="btn-secondary">Termo Anual</button>
-          <button className="btn-primary">Termo de Evento</button>
-        </div>
-      </div>
-
-      <div className="card overflow-hidden">
-        <table className="w-full">
-          <thead>
-            <tr>
-              <th className="table-header">Código</th>
-              <th className="table-header">Tipo</th>
-              <th className="table-header">Voluntário</th>
-              <th className="table-header">Pastoral/Evento</th>
-              <th className="table-header">Vigência</th>
-              <th className="table-header">Status</th>
-              <th className="table-header">Ações</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100">
-            {filtered.map(termo => (
-              <tr key={termo.id} className="hover:bg-gray-50 cursor-pointer" onClick={() => onSelectTermo(termo)}>
-                <td className="table-cell font-mono font-medium text-primary-700">{termo.codigo}</td>
-                <td className="table-cell">
-                  <span className={`badge ${termo.tipo === 'ANUAL' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'}`}>
-                    {termo.tipo === 'ANUAL' ? '📋 Anual' : '📅 Evento'}
-                  </span>
-                </td>
-                <td className="table-cell">{getVoluntarioNome(termo.voluntarioId)}</td>
-                <td className="table-cell text-xs">{termo.tipo === 'ANUAL' ? getPastoralNome(termo.pastoralId) : getEventoNome(termo.eventoId)}</td>
-                <td className="table-cell text-xs">{formatDate(termo.dataInicio)} a {formatDate(termo.dataFim)}</td>
-                <td className="table-cell">
-                  <span className={`badge ${getStatusColor(termo.status)}`}>
-                    {getStatusIcon(termo.status)} {termo.status.replace(/_/g, ' ')}
-                  </span>
-                </td>
-                <td className="table-cell">
-                  <div className="flex gap-2" onClick={e => e.stopPropagation()}>
-                    <button className="text-primary-600 hover:text-primary-700 text-xs">PDF</button>
-                    {termo.status === 'GERADO' && <button className="text-green-600 hover:text-green-700 text-xs">Assinar</button>}
-                    {termo.status === 'ASSINADO' && <button className="text-gray-600 hover:text-gray-700 text-xs">Download</button>}
-                    {termo.status === 'EXPIRADO' && <button className="text-primary-600 hover:text-primary-700 text-xs">Renovar</button>}
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
-}
-
-// ==================== TERMO DETAIL MODAL ====================
-function TermoDetailModal({ termo, onClose }: { termo: Termo; onClose: () => void }) {
-  const termoLogs = auditoriaLogs.filter(l => l.documentoId === termo.id);
-  
-  return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-        <div className="p-6 border-b border-gray-200 flex items-center justify-between">
-          <div>
-            <h3 className="text-lg font-semibold text-gray-800">{termo.codigo}</h3>
-            <p className="text-sm text-gray-500">
-              {termo.tipo === 'ANUAL' ? 'Termo de Voluntariado Pastoral' : 'Termo de Voluntariado para Evento'} • Versão {termo.versao}
-            </p>
-          </div>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
-        </div>
-        
-        <div className="p-6 space-y-6">
-          {/* Status & Info */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="bg-gray-50 rounded-lg p-4">
-              <p className="text-xs text-gray-500 uppercase">Status</p>
-              <div className="mt-1">
-                <span className={`badge text-sm ${getStatusColor(termo.status)}`}>
-                  {getStatusIcon(termo.status)} {termo.status.replace(/_/g, ' ')}
-                </span>
-              </div>
-            </div>
-            <div className="bg-gray-50 rounded-lg p-4">
-              <p className="text-xs text-gray-500 uppercase">Voluntário</p>
-              <p className="text-sm font-medium mt-1">{getVoluntarioNome(termo.voluntarioId)}</p>
-            </div>
-            <div className="bg-gray-50 rounded-lg p-4">
-              <p className="text-xs text-gray-500 uppercase">{termo.tipo === 'ANUAL' ? 'Pastoral' : 'Evento'}</p>
-              <p className="text-sm font-medium mt-1">{termo.tipo === 'ANUAL' ? getPastoralNome(termo.pastoralId) : getEventoNome(termo.eventoId)}</p>
-            </div>
-          </div>
-
-          {/* Timeline */}
-          <div>
-            <h4 className="text-sm font-semibold text-gray-800 mb-3">📋 Linha do Tempo</h4>
-            <div className="space-y-3">
-              {termo.dataGeracao && <TimelineItem date={termo.dataGeracao} label="Documento gerado" active />}
-              {termo.dataSolicitacaoAssinatura && <TimelineItem date={termo.dataSolicitacaoAssinatura} label="Assinatura solicitada via gov.br" active />}
-              {termo.status === 'ASSINATURA_EM_ANDAMENTO' && <TimelineItem date="Em andamento" label="Voluntário autenticando no gov.br..." active={false} pending />}
-              {termo.dataAssinatura && <TimelineItem date={termo.dataAssinatura} label="Documento assinado com sucesso" active />}
-              {termo.status === 'RECUSADO' && <TimelineItem date="-" label="Assinatura recusada pelo voluntário" active={false} error />}
-              {termo.status === 'EXPIRADO' && <TimelineItem date="-" label="Termo expirado - fim da vigência" active={false} error />}
-            </div>
-          </div>
-
-          {/* Gov.br Signature Info */}
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <h4 className="text-sm font-semibold text-blue-800 mb-2">🔐 Assinatura Eletrônica gov.br</h4>
-            <div className="grid grid-cols-2 gap-3 text-xs">
-              <div><span className="text-blue-600">ID Assinatura:</span> <span className="font-mono">{termo.assinaturaGovBrId || 'Pendente'}</span></div>
-              <div><span className="text-blue-600">Protocolo:</span> <span className="font-mono">{termo.assinaturaGovBrId ? 'SIG-' + termo.id.toUpperCase() : '-'}</span></div>
-              <div><span className="text-blue-600">Hash Documento:</span> <span className="font-mono truncate">{termo.hashDocumento || '-'}</span></div>
-              <div><span className="text-blue-600">Hash Assinado:</span> <span className="font-mono truncate">{termo.hashDocumentoAssinado || 'Pendente'}</span></div>
-            </div>
-            {termo.status === 'AGUARDANDO_ASSINATURA' && (
-              <div className="mt-3 pt-3 border-t border-blue-200">
-                <p className="text-xs text-blue-700">O voluntário será redirecionado para autenticação no gov.br (nível Prata/Ouro obrigatório).</p>
-                <p className="text-xs text-blue-600 mt-1">API: assinatura-api.iti.br/externo/v2/assinarPKCS7</p>
-              </div>
-            )}
-          </div>
-
-          {/* Actions */}
-          <div className="flex flex-wrap gap-2">
-            <button className="btn-secondary text-sm"><IconDocument /> <span className="ml-1">Visualizar PDF</span></button>
-            {termo.status === 'GERADO' && <button className="btn-primary text-sm">🔐 Solicitar Assinatura gov.br</button>}
-            {termo.status === 'ASSINADO' && <button className="btn-success text-sm">📥 Download PDF Assinado</button>}
-            {termo.status === 'EXPIRADO' && <button className="btn-primary text-sm">🔄 Renovar Termo</button>}
-            {(termo.status === 'AGUARDANDO_ASSINATURA' || termo.status === 'GERADO') && <button className="btn-danger text-sm">Cancelar</button>}
-            <button className="btn-secondary text-sm">📋 Auditoria</button>
-          </div>
-
-          {/* Audit Trail */}
-          {termoLogs.length > 0 && (
-            <div>
-              <h4 className="text-sm font-semibold text-gray-800 mb-3">📝 Registro de Auditoria</h4>
-              <div className="space-y-2">
-                {termoLogs.map(log => (
-                  <div key={log.id} className="flex items-center gap-3 p-2 bg-gray-50 rounded-lg text-xs">
-                    <span className="text-gray-500 w-32">{log.dataHora}</span>
-                    <span className="font-medium text-gray-700">{getAuditoriaLabel(log.acao)}</span>
-                    {log.statusNovo && <span className={`badge ${getStatusColor(log.statusNovo as StatusTermo)}`}>{log.statusNovo}</span>}
-                    <span className="text-gray-400 ml-auto">{log.usuario}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function TimelineItem({ date, label, active, pending, error }: { date: string; label: string; active: boolean; pending?: boolean; error?: boolean }) {
-  return (
-    <div className="flex items-center gap-3">
-      <div className={`w-3 h-3 rounded-full ${error ? 'bg-red-500' : pending ? 'bg-yellow-500 animate-pulse' : active ? 'bg-green-500' : 'bg-gray-300'}`}></div>
-      <div className="flex-1">
-        <p className={`text-sm ${error ? 'text-red-600' : pending ? 'text-yellow-600' : 'text-gray-700'}`}>{label}</p>
-        <p className="text-xs text-gray-400">{date}</p>
-      </div>
-    </div>
-  );
-}
-
-// ==================== TEMPLATES PAGE ====================
-function TemplatesPage() {
-  return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-gray-500">{templates.length} templates cadastrados</p>
-        <button className="btn-primary"><span className="mr-2">+</span> Novo Template</button>
-      </div>
-      {templates.map(template => (
-        <div key={template.id} className="card p-6">
-          <div className="flex items-start justify-between mb-4">
-            <div>
-              <h3 className="font-semibold text-gray-800">{template.nome}</h3>
-              <div className="flex gap-2 mt-1">
-                <span className={`badge ${template.tipo === 'ANUAL' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'}`}>{template.tipo}</span>
-                <span className="badge bg-gray-100 text-gray-600">v{template.versao}</span>
-                <span className={`badge ${template.ativa ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>{template.ativa ? 'Ativo' : 'Inativo'}</span>
-              </div>
-            </div>
-            <div className="flex gap-2">
-              <button className="btn-secondary text-xs">Editar</button>
-              <button className="btn-secondary text-xs">Nova Versão</button>
-            </div>
-          </div>
-          <div className="bg-gray-50 rounded-lg p-4 max-h-40 overflow-y-auto">
-            <pre className="text-xs text-gray-600 whitespace-pre-wrap font-mono">{template.conteudo.substring(0, 500)}...</pre>
-          </div>
-          <div className="mt-3">
-            <p className="text-xs text-gray-500 mb-1">Variáveis disponíveis:</p>
-            <div className="flex flex-wrap gap-1">
-              {template.variaveis.map(v => (
-                <span key={v} className="text-xs bg-primary-50 text-primary-700 px-2 py-0.5 rounded font-mono">{'{{' + v + '}}'}</span>
-              ))}
-            </div>
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-// ==================== VALIDACAO PAGE ====================
-function ValidacaoPage() {
-  const [codigo, setCodigo] = useState('');
-  const [resultado, setResultado] = useState<'valido' | 'invalido' | null>(null);
-  const [termoEncontrado, setTermoEncontrado] = useState<Termo | null>(null);
-
-  const buscar = () => {
-    const termo = termos.find(t => t.codigo === codigo.toUpperCase());
-    if (termo && termo.status === 'ASSINADO') {
-      setResultado('valido');
-      setTermoEncontrado(termo);
-    } else if (termo) {
-      setResultado('invalido');
-      setTermoEncontrado(termo);
-    } else {
-      setResultado('invalido');
-      setTermoEncontrado(null);
-    }
+  const copy = () => {
+    navigator.clipboard.writeText(code);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   };
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6">
-      <div className="text-center">
-        <div className="w-16 h-16 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-4">
-          <IconShield />
-        </div>
-        <h3 className="text-xl font-bold text-gray-800">Validação de Termo</h3>
-        <p className="text-sm text-gray-500 mt-1">Verifique a autenticidade de um Termo de Voluntariado</p>
-      </div>
-
-      <div className="card p-6">
-        <div className="flex gap-3">
-          <input className="input-field flex-1" placeholder="Ex: TVP-2027-000001" value={codigo} onChange={e => setCodigo(e.target.value)} />
-          <button className="btn-primary" onClick={buscar}>
-            <IconCheck /> <span className="ml-1">Validar</span>
-          </button>
-        </div>
-        <p className="text-xs text-gray-400 mt-2">Você também pode escanear o QR Code do documento.</p>
-      </div>
-
-      {resultado === 'valido' && termoEncontrado && (
-        <div className="card p-6 border-green-200 bg-green-50">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center">
-              <span className="text-white text-2xl">✓</span>
-            </div>
-            <div>
-              <h4 className="text-lg font-bold text-green-800">Documento Válido</h4>
-              <p className="text-sm text-green-600">Este termo possui assinatura eletrônica válida via gov.br</p>
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-3 text-sm">
-            <div><span className="text-gray-500">Código:</span> <span className="font-mono font-medium">{termoEncontrado.codigo}</span></div>
-            <div><span className="text-gray-500">Tipo:</span> {termoEncontrado.tipo === 'ANUAL' ? 'Voluntariado Pastoral' : 'Voluntariado Evento'}</div>
-            <div><span className="text-gray-500">Emissão:</span> {formatDate(termoEncontrado.dataGeracao)}</div>
-            <div><span className="text-gray-500">Assinatura:</span> {formatDate(termoEncontrado.dataAssinatura || '')}</div>
-            <div><span className="text-gray-500">Voluntário:</span> {getVoluntarioNome(termoEncontrado.voluntarioId)}</div>
-            <div><span className="text-gray-500">Vigência:</span> {formatDate(termoEncontrado.dataInicio)} a {formatDate(termoEncontrado.dataFim)}</div>
-          </div>
-          <div className="mt-4 pt-4 border-t border-green-200">
-            <p className="text-xs text-green-700">Hash SHA-256: <span className="font-mono">{termoEncontrado.hashDocumentoAssinado}</span></p>
-            <p className="text-xs text-green-600 mt-1">Validação: Assinar digitalmente via ITI - validar.iti.gov.br</p>
-          </div>
+    <div className="relative">
+      {filename && (
+        <div className="flex items-center justify-between bg-slate-800 px-4 py-2 rounded-t-lg border-b border-slate-700">
+          <span className="text-xs text-slate-400 font-mono">{filename}</span>
+          {language && <span className="text-[10px] text-slate-500 uppercase">{language}</span>}
         </div>
       )}
-
-      {resultado === 'invalido' && (
-        <div className="card p-6 border-red-200 bg-red-50">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-red-500 rounded-full flex items-center justify-center">
-              <span className="text-white text-2xl">✗</span>
-            </div>
-            <div>
-              <h4 className="text-lg font-bold text-red-800">Documento Inválido</h4>
-              <p className="text-sm text-red-600">
-                {termoEncontrado 
-                  ? `Este termo existe mas não possui assinatura válida. Status: ${termoEncontrado.status}`
-                  : 'Código não encontrado na base de dados.'}
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* QR Code Demo */}
-      <div className="card p-6 text-center">
-        <h4 className="text-sm font-semibold text-gray-800 mb-3">Exemplo de QR Code no PDF</h4>
-        <div className="w-32 h-32 bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center mx-auto">
-          <div className="text-center">
-            <div className="grid grid-cols-5 gap-0.5 w-20 h-20 mx-auto">
-              {Array.from({length: 25}).map((_, i) => (
-                <div key={i} className={`${Math.random() > 0.5 ? 'bg-gray-800' : 'bg-white'} rounded-sm`}></div>
-              ))}
-            </div>
-          </div>
-        </div>
-        <p className="text-xs text-gray-500 mt-2">/validar-termo/{'{CODIGO}'}</p>
-      </div>
+      <button onClick={copy} className={`absolute top-2 right-2 px-2 py-1 text-xs rounded transition-colors ${copied ? 'bg-green-600 text-white' : 'bg-slate-700 hover:bg-slate-600 text-slate-300'}`}>
+        {copied ? '✓ Copiado' : 'Copiar'}
+      </button>
+      <pre className={`code-block ${filename ? 'rounded-t-none' : ''}`}>{code}</pre>
     </div>
   );
 }
 
-// ==================== AUDITORIA PAGE ====================
-function AuditoriaPage() {
+function FileTreeItem({ name, icon, indent = 0, onClick, active }: { name: string; icon: string; indent?: number; onClick?: () => void; active?: boolean }) {
+  return (
+    <div 
+      className={`file-tree-item ${active ? 'bg-primary-50 text-primary-700' : ''}`}
+      style={{ paddingLeft: `${12 + indent * 16}px` }}
+      onClick={onClick}
+    >
+      <span className="text-sm">{icon}</span>
+      <span className="text-sm truncate">{name}</span>
+    </div>
+  );
+}
+
+// ==================== OVERVIEW PAGE ====================
+function OverviewPage() {
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-gray-500">{auditoriaLogs.length} registros de auditoria</p>
-        <button className="btn-secondary">Exportar CSV</button>
+      <div className="text-center py-8">
+        <div className="w-20 h-20 bg-gradient-to-br from-primary-500 to-primary-700 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+          <span className="text-white text-3xl">✝</span>
+        </div>
+        <h1 className="text-3xl font-bold text-slate-800">Gestão de Termos de Voluntariado Paroquial</h1>
+        <p className="text-slate-500 mt-2 max-w-2xl mx-auto">
+          Plataforma completa para cadastro de voluntários, geração de termos, assinatura eletrônica via gov.br e gestão documental.
+        </p>
+        <div className="flex justify-center gap-3 mt-4">
+          <span className="badge bg-red-100 text-red-700 px-3 py-1">🅰️ Angular 17+</span>
+          <span className="badge bg-orange-100 text-orange-700 px-3 py-1">🔺 Laravel 11</span>
+          <span className="badge bg-blue-100 text-blue-700 px-3 py-1">🔐 JWT Auth</span>
+          <span className="badge bg-green-100 text-green-700 px-3 py-1">🗄️ SQL Server</span>
+        </div>
       </div>
-      <div className="card overflow-hidden">
-        <table className="w-full">
-          <thead>
-            <tr>
-              <th className="table-header">Data/Hora</th>
-              <th className="table-header">Usuário</th>
-              <th className="table-header">Ação</th>
-              <th className="table-header">Documento</th>
-              <th className="table-header">Status</th>
-              <th className="table-header">Resultado</th>
-              <th className="table-header">IP</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100">
-            {auditoriaLogs.map(log => (
-              <tr key={log.id} className="hover:bg-gray-50">
-                <td className="table-cell text-xs font-mono">{log.dataHora}</td>
-                <td className="table-cell text-sm">{log.usuario}</td>
-                <td className="table-cell"><span className="badge bg-gray-100 text-gray-700">{getAuditoriaLabel(log.acao)}</span></td>
-                <td className="table-cell text-xs font-mono">{log.documentoId || '-'}</td>
-                <td className="table-cell text-xs">
-                  {log.statusNovo ? <span className={`badge ${getStatusColor(log.statusNovo as StatusTermo)}`}>{log.statusNovo}</span> : '-'}
-                </td>
-                <td className="table-cell">
-                  <span className={`badge ${log.resultado === 'SUCESSO' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>{log.resultado}</span>
-                </td>
-                <td className="table-cell text-xs font-mono text-gray-400">{log.ip || '-'}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="card p-6">
+          <h3 className="font-semibold text-slate-800 mb-3">🎯 Objetivo</h3>
+          <p className="text-sm text-slate-600">
+            Permitir que a paróquia cadastre voluntários, vincule-os às pastorais e eventos, gere documentos PDF, 
+            controle o ciclo de assinatura eletrônica via gov.br e mantenha auditoria completa de todas as operações.
+          </p>
+        </div>
+        <div className="card p-6">
+          <h3 className="font-semibold text-slate-800 mb-3">📋 Tipos de Termos</h3>
+          <div className="space-y-2 text-sm text-slate-600">
+            <p><strong>TVP</strong> - Termo de Voluntariado Pastoral (anual)</p>
+            <p><strong>TVE</strong> - Termo de Voluntariado para Evento</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="card p-6">
+        <h3 className="font-semibold text-slate-800 mb-4">🏗️ Arquitetura do Sistema</h3>
+        <CodeViewer code={`
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                    FRONTEND - Angular 17+ (Standalone Components)            │
+├──────────────┬──────────────┬──────────────┬──────────────┬────────────────┤
+│   Auth       │  Dashboard   │  Voluntários │   Pastorais  │    Eventos     │
+│   Module     │   Module     │   Module     │   Module     │    Module      │
+├──────────────┴──────────────┴──────────────┴──────────────┴────────────────┤
+│              Termos │ Templates │ Validação │ Auditoria                      │
+├─────────────────────────────────────────────────────────────────────────────┤
+│  Core: Interceptors (JWT) │ Guards (Auth/Role) │ Services │ Models          │
+└───────────────────────────────────┬─────────────────────────────────────────┘
+                                    │ HTTP/REST + JWT Bearer Token
+┌───────────────────────────────────▼─────────────────────────────────────────┐
+│                    BACKEND - Laravel 11 (API)                                │
+├──────────────┬──────────────┬──────────────┬──────────────┬────────────────┤
+│  Auth        │  Voluntario  │   Pastoral   │    Evento    │     Termo      │
+│  Controller  │  Controller  │  Controller  │  Controller  │   Controller   │
+├──────────────┴──────────────┴──────────────┴──────────────┴────────────────┤
+│                          SERVICE LAYER (Business Logic)                      │
+├──────────────┬──────────────┬──────────────┬──────────────┬────────────────┤
+│ TermoService │ GovBrSign    │ PdfGenerator │  Storage     │  Notification  │
+│              │ Service      │ Service      │  Service     │  Service       │
+├──────────────┴──────────────┴──────────────┴──────────────┴────────────────┤
+│  AuditoriaService │ HashService │ DocumentStorageService                    │
+└────────┬────────────────┬────────────────┬────────────────┬────────────────┘
+         │                │                │                │
+    ┌────▼────┐    ┌──────▼──────┐   ┌────▼────┐    ┌──────▼──────┐
+    │ gov.br  │    │  S3/Azure/  │   │  SQL    │    │   Queue     │
+    │  API    │    │   Local     │   │ Server  │    │  (Jobs)     │
+    │(assin.) │    │  Storage    │   │(EF/DB)  │    │             │
+    └─────────┘    └─────────────┘   └─────────┘    └─────────────┘
+`} filename="arquitetura.txt" />
+      </div>
+
+      <div className="card p-6">
+        <h3 className="font-semibold text-slate-800 mb-4">📊 Hierarquia Institucional</h3>
+        <CodeViewer code={`
+Diocese
+└── Paróquias (multi-tenant, isoladas por paroquia_id)
+    ├── Comunidades
+    ├── Pastorais
+    │   ├── Coordenador
+    │   └── Voluntários
+    │       └── Termos (TVP-YYYY-NNNNNN)
+    ├── Eventos
+    │   ├── Voluntários vinculados
+    │   └── Termos (TVE-YYYY-NNNNNN)
+    ├── Templates de Termos
+    └── Configurações
+`} />
+      </div>
+
+      <div className="card p-6">
+        <h3 className="font-semibold text-slate-800 mb-4">🔄 Ciclo de Vida do Termo</h3>
+        <div className="flex flex-wrap items-center gap-2 text-xs">
+          {['RASCUNHO', 'GERADO', 'AGUARDANDO_ASSINATURA', 'ASSINATURA_EM_ANDAMENTO', 'ASSINADO'].map((s, i) => (
+            <span key={s} className="flex items-center gap-2">
+              {i > 0 && <span className="text-slate-400">→</span>}
+              <span className="badge bg-primary-50 text-primary-700 px-2 py-1">{s.replace(/_/g, ' ')}</span>
+            </span>
+          ))}
+        </div>
+        <p className="text-xs text-slate-500 mt-3">Status alternativos: RECUSADO | CANCELADO | EXPIRADO | ERRO_ASSINATURA</p>
+      </div>
+
+      <div className="card p-6">
+        <h3 className="font-semibold text-slate-800 mb-4">👥 Perfis de Usuário (RBAC)</h3>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          {[
+            { perfil: 'ADMIN_DIOCESE', desc: 'Acesso total à diocese' },
+            { perfil: 'ADMIN_PAROQUIA', desc: 'Administra a paróquia' },
+            { perfil: 'COORDENADOR_PASTORAL', desc: 'Gerencia uma pastoral' },
+            { perfil: 'RESPONSAVEL_EVENTO', desc: 'Gerencia eventos' },
+            { perfil: 'SECRETARIA', desc: 'Operações administrativas' },
+            { perfil: 'VOLUNTARIO', desc: 'Acesso aos próprios termos' },
+            { perfil: 'AUDITOR', desc: 'Consulta logs de auditoria' },
+          ].map(p => (
+            <div key={p.perfil} className="bg-slate-50 rounded-lg p-3">
+              <p className="text-xs font-bold text-slate-700">{p.perfil}</p>
+              <p className="text-[10px] text-slate-500 mt-1">{p.desc}</p>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
 }
 
-// ==================== ARQUITETURA PAGE ====================
-function ArquiteturaPage() {
+// ==================== ANGULAR PAGE ====================
+function AngularPage({ activeFile, setActiveFile }: { activeFile: string; setActiveFile: (f: string) => void }) {
+  const [tab, setTab] = useState('structure');
+  
+  const files: Record<string, { code: string; lang: string }> = {
+    'app.config.ts': { code: angularStructure.appConfig, lang: 'typescript' },
+    'app.routes.ts': { code: angularStructure.appRoutes, lang: 'typescript' },
+    'auth.interceptor.ts': { code: angularCore.authInterceptor, lang: 'typescript' },
+    'error.interceptor.ts': { code: angularCore.errorInterceptor, lang: 'typescript' },
+    'auth.guard.ts': { code: angularCore.authGuard, lang: 'typescript' },
+    'role.guard.ts': { code: angularCore.roleGuard, lang: 'typescript' },
+    'auth.service.ts': { code: angularCore.authService, lang: 'typescript' },
+    'notification.service.ts': { code: angularCore.notificationService, lang: 'typescript' },
+    'models': { code: angularCore.models, lang: 'typescript' },
+    'dashboard.component.ts': { code: angularFeatures.dashboardComponent, lang: 'typescript' },
+    'termos.service.ts': { code: angularFeatures.termosComponent.split('// src/app/features/termos/termo-assinatura')[0], lang: 'typescript' },
+    'termo-assinatura.component.ts': { code: '// src/app/features/termos/termo-assinatura/termo-assinatura.component.ts\n' + angularFeatures.termosComponent.split('// src/app/features/termos/termo-assinatura/')[1]?.split('// src/app/features/voluntarios')[0] || '', lang: 'typescript' },
+    'voluntarios.service.ts': { code: angularFeatures.voluntariosComponent.split('// src/app/features/voluntarios/voluntario-form')[0], lang: 'typescript' },
+    'voluntario-form.component.ts': { code: '// src/app/features/voluntarios/voluntario-form/voluntario-form.component.ts\n' + (angularFeatures.voluntariosComponent.split('// src/app/features/voluntarios/voluntario-form/voluntario-form.component.ts')[1] || ''), lang: 'typescript' },
+    'validacao.component.ts': { code: angularFeatures.validacaoComponent, lang: 'typescript' },
+    'cpf.validator.ts': { code: angularShared.cpfValidator, lang: 'typescript' },
+    'status-badge.pipe.ts': { code: angularShared.statusBadgePipe, lang: 'typescript' },
+    'environment.ts': { code: angularEnvironment, lang: 'typescript' },
+  };
+
   return (
-    <div className="max-w-5xl mx-auto space-y-8">
-      <div className="text-center mb-8">
-        <h2 className="text-2xl font-bold text-gray-800">Arquitetura do Sistema</h2>
-        <p className="text-gray-500 mt-2">Gestão de Termos de Voluntariado Paroquial - Visão Geral</p>
+    <div className="space-y-6">
+      <div className="flex items-center gap-4 border-b border-slate-200">
+        {[
+          { id: 'structure', label: '📁 Estrutura' },
+          { id: 'code', label: '💻 Código' },
+        ].map(t => (
+          <button key={t.id} className={`tab-btn ${tab === t.id ? 'active' : ''}`} onClick={() => setTab(t.id)}>
+            {t.label}
+          </button>
+        ))}
       </div>
 
-      {/* Architecture Diagram */}
-      <div className="card p-6">
-        <h3 className="text-lg font-semibold text-gray-800 mb-4">🏗️ Arquitetura Geral</h3>
-        <div className="bg-gray-50 rounded-lg p-6 overflow-x-auto">
-          <pre className="text-xs font-mono text-gray-700 leading-relaxed">{`
-┌─────────────────────────────────────────────────────────────────────────┐
-│                         FRONTEND (React + Tailwind)                      │
-├─────────────┬──────────────┬──────────────┬─────────────┬───────────────┤
-│  Dashboard  │  Voluntários │   Pastorais  │   Eventos   │    Termos     │
-├─────────────┴──────────────┴──────────────┴─────────────┴───────────────┤
-│                    Templates │ Validação │ Auditoria                      │
-└─────────────────────────────────┬───────────────────────────────────────┘
-                                  │ REST API
-┌─────────────────────────────────▼───────────────────────────────────────┐
-│                     BACKEND (Laravel + JWT)                              │
-├─────────────┬──────────────┬──────────────┬─────────────┬───────────────┤
-│  Voluntário │   Pastoral   │    Evento    │    Termo    │   Template    │
-│  Service    │   Service    │   Service    │   Service   │   Service     │
-├─────────────┴──────────────┴──────────────┴─────────────┴───────────────┤
-│  GovBrSignature │ DocumentStorage │ Notification │ Audit │ PDFGenerator │
-│    Service      │     Service     │    Service   │ Log   │   Service    │
-└────────┬────────────────┬────────────────┬───────────┬──────────────────┘
-         │                │                │           │
-    ┌────▼────┐    ┌──────▼──────┐   ┌────▼────┐  ┌──▼──────────┐
-    │ gov.br  │    │ S3/Azure/   │   │  SMTP/  │  │ SQL Server  │
-    │  API    │    │   Local     │   │ WhatsApp│  │   (EF Core) │
-    │(assin.) │    │  Storage    │   │         │  │             │
-    └─────────┘    └─────────────┘   └─────────┘  └─────────────┘
-          `}</pre>
+      {tab === 'structure' && (
+        <div className="card p-6">
+          <h3 className="font-semibold text-slate-800 mb-4">Estrutura do Projeto Angular</h3>
+          <CodeViewer code={angularStructure.root} filename="angular-project-structure" />
+          
+          <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="bg-slate-50 rounded-lg p-4">
+              <h4 className="text-sm font-semibold text-slate-700 mb-2">📦 Módulos Lazy-Loaded</h4>
+              <ul className="text-xs text-slate-600 space-y-1">
+                <li>• features/auth/ - Autenticação</li>
+                <li>• features/dashboard/ - Dashboard</li>
+                <li>• features/voluntarios/ - CRUD Voluntários</li>
+                <li>• features/pastorais/ - CRUD Pastorais</li>
+                <li>• features/eventos/ - CRUD Eventos</li>
+                <li>• features/termos/ - Gestão de Termos</li>
+                <li>• features/templates/ - Templates</li>
+                <li>• features/auditoria/ - Logs de Auditoria</li>
+                <li>• features/validacao/ - Validação Pública</li>
+              </ul>
+            </div>
+            <div className="bg-slate-50 rounded-lg p-4">
+              <h4 className="text-sm font-semibold text-slate-700 mb-2">🔧 Core Module</h4>
+              <ul className="text-xs text-slate-600 space-y-1">
+                <li>• interceptors/ - JWT, Error handling</li>
+                <li>• guards/ - Auth, Role-based access</li>
+                <li>• services/ - Auth, Notification, API</li>
+                <li>• models/ - Interfaces TypeScript</li>
+              </ul>
+            </div>
+          </div>
         </div>
+      )}
+
+      {tab === 'code' && (
+        <div className="flex gap-4">
+          <div className="w-64 flex-shrink-0">
+            <div className="card p-3 sticky top-0">
+              <h4 className="text-xs font-semibold text-slate-500 uppercase mb-2">Arquivos</h4>
+              <div className="space-y-0.5 max-h-[70vh] overflow-y-auto">
+                <FileTreeItem name="app/" icon="📁" active={false} />
+                <FileTreeItem name="app.config.ts" icon="📄" indent={1} onClick={() => setActiveFile('app.config.ts')} active={activeFile === 'app.config.ts'} />
+                <FileTreeItem name="app.routes.ts" icon="📄" indent={1} onClick={() => setActiveFile('app.routes.ts')} active={activeFile === 'app.routes.ts'} />
+                <FileTreeItem name="core/" icon="📁" indent={1} />
+                <FileTreeItem name="interceptors/" icon="📁" indent={2} />
+                <FileTreeItem name="auth.interceptor.ts" icon="📄" indent={3} onClick={() => setActiveFile('auth.interceptor.ts')} active={activeFile === 'auth.interceptor.ts'} />
+                <FileTreeItem name="error.interceptor.ts" icon="📄" indent={3} onClick={() => setActiveFile('error.interceptor.ts')} active={activeFile === 'error.interceptor.ts'} />
+                <FileTreeItem name="guards/" icon="📁" indent={2} />
+                <FileTreeItem name="auth.guard.ts" icon="📄" indent={3} onClick={() => setActiveFile('auth.guard.ts')} active={activeFile === 'auth.guard.ts'} />
+                <FileTreeItem name="role.guard.ts" icon="📄" indent={3} onClick={() => setActiveFile('role.guard.ts')} active={activeFile === 'role.guard.ts'} />
+                <FileTreeItem name="services/" icon="📁" indent={2} />
+                <FileTreeItem name="auth.service.ts" icon="📄" indent={3} onClick={() => setActiveFile('auth.service.ts')} active={activeFile === 'auth.service.ts'} />
+                <FileTreeItem name="notification.service.ts" icon="📄" indent={3} onClick={() => setActiveFile('notification.service.ts')} active={activeFile === 'notification.service.ts'} />
+                <FileTreeItem name="models/" icon="📁" indent={2} />
+                <FileTreeItem name="termo.model.ts" icon="📄" indent={3} onClick={() => setActiveFile('models')} active={activeFile === 'models'} />
+                <FileTreeItem name="features/" icon="📁" indent={1} />
+                <FileTreeItem name="dashboard/" icon="📁" indent={2} />
+                <FileTreeItem name="dashboard.component.ts" icon="📄" indent={3} onClick={() => setActiveFile('dashboard.component.ts')} active={activeFile === 'dashboard.component.ts'} />
+                <FileTreeItem name="termos/" icon="📁" indent={2} />
+                <FileTreeItem name="termos.service.ts" icon="📄" indent={3} onClick={() => setActiveFile('termos.service.ts')} active={activeFile === 'termos.service.ts'} />
+                <FileTreeItem name="termo-assinatura.component.ts" icon="📄" indent={3} onClick={() => setActiveFile('termo-assinatura.component.ts')} active={activeFile === 'termo-assinatura.component.ts'} />
+                <FileTreeItem name="voluntarios/" icon="📁" indent={2} />
+                <FileTreeItem name="voluntarios.service.ts" icon="📄" indent={3} onClick={() => setActiveFile('voluntarios.service.ts')} active={activeFile === 'voluntarios.service.ts'} />
+                <FileTreeItem name="voluntario-form.component.ts" icon="📄" indent={3} onClick={() => setActiveFile('voluntario-form.component.ts')} active={activeFile === 'voluntario-form.component.ts'} />
+                <FileTreeItem name="validacao/" icon="📁" indent={2} />
+                <FileTreeItem name="validacao.component.ts" icon="📄" indent={3} onClick={() => setActiveFile('validacao.component.ts')} active={activeFile === 'validacao.component.ts'} />
+                <FileTreeItem name="shared/" icon="📁" indent={1} />
+                <FileTreeItem name="cpf.validator.ts" icon="📄" indent={2} onClick={() => setActiveFile('cpf.validator.ts')} active={activeFile === 'cpf.validator.ts'} />
+                <FileTreeItem name="status-badge.pipe.ts" icon="📄" indent={2} onClick={() => setActiveFile('status-badge.pipe.ts')} active={activeFile === 'status-badge.pipe.ts'} />
+                <FileTreeItem name="environments/" icon="📁" indent={1} />
+                <FileTreeItem name="environment.ts" icon="📄" indent={2} onClick={() => setActiveFile('environment.ts')} active={activeFile === 'environment.ts'} />
+              </div>
+            </div>
+          </div>
+          <div className="flex-1 min-w-0">
+            {activeFile && files[activeFile] ? (
+              <CodeViewer code={files[activeFile].code} filename={activeFile} language={files[activeFile].lang} />
+            ) : (
+              <div className="card p-12 text-center">
+                <p className="text-slate-400">← Selecione um arquivo para visualizar o código</p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ==================== LARAVEL PAGE ====================
+function LaravelPage({ activeFile, setActiveFile }: { activeFile: string; setActiveFile: (f: string) => void }) {
+  const [tab, setTab] = useState('structure');
+  
+  const files: Record<string, { code: string; lang: string }> = {
+    'routes/api.php': { code: laravelRoutes, lang: 'php' },
+    'Models/Termo.php': { code: laravelModels.termo, lang: 'php' },
+    'Models/Voluntario.php': { code: laravelModels.voluntario, lang: 'php' },
+    'Models/User.php': { code: laravelModels.user, lang: 'php' },
+    'TermoController.php': { code: laravelControllers.termoController, lang: 'php' },
+    'AuthController.php': { code: laravelControllers.authController, lang: 'php' },
+    'DashboardController.php': { code: laravelControllers.dashboardController, lang: 'php' },
+    'GovBrSignatureService.php': { code: laravelServices.govBrSignatureService, lang: 'php' },
+    'TermoService.php': { code: laravelServices.termoService, lang: 'php' },
+    'PdfGeneratorService.php': { code: laravelServices.pdfGeneratorService, lang: 'php' },
+    'AuditoriaService.php': { code: laravelServices.auditoriaService, lang: 'php' },
+    'HashService.php': { code: laravelServices.hashService, lang: 'php' },
+    'DocumentStorageService.php': { code: laravelServices.documentStorageService, lang: 'php' },
+    'migrations': { code: laravelMigrations, lang: 'php' },
+    'config/jwt.php': { code: laravelConfig.jwt, lang: 'php' },
+    'config/govbr.php': { code: laravelConfig.govbr, lang: 'php' },
+    '.env.example': { code: laravelConfig.env, lang: 'env' },
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center gap-4 border-b border-slate-200">
+        {[
+          { id: 'structure', label: '📁 Estrutura' },
+          { id: 'code', label: '💻 Código' },
+        ].map(t => (
+          <button key={t.id} className={`tab-btn ${tab === t.id ? 'active' : ''}`} onClick={() => setTab(t.id)}>
+            {t.label}
+          </button>
+        ))}
       </div>
 
-      {/* Database Schema */}
+      {tab === 'structure' && (
+        <div className="card p-6">
+          <h3 className="font-semibold text-slate-800 mb-4">Estrutura do Projeto Laravel</h3>
+          <CodeViewer code={laravelStructure.root} filename="laravel-project-structure" />
+          
+          <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="bg-slate-50 rounded-lg p-4">
+              <h4 className="text-sm font-semibold text-slate-700 mb-2">🎮 Controllers</h4>
+              <ul className="text-xs text-slate-600 space-y-1">
+                <li>• AuthController - JWT Auth</li>
+                <li>• VoluntarioController - CRUD</li>
+                <li>• PastoralController - CRUD</li>
+                <li>• EventoController - CRUD</li>
+                <li>• TermoController - Gestão completa</li>
+                <li>• TermoTemplateController</li>
+                <li>• DashboardController</li>
+                <li>• ValidacaoController</li>
+                <li>• AuditoriaController</li>
+              </ul>
+            </div>
+            <div className="bg-slate-50 rounded-lg p-4">
+              <h4 className="text-sm font-semibold text-slate-700 mb-2">⚙️ Services</h4>
+              <ul className="text-xs text-slate-600 space-y-1">
+                <li>• TermoService - Lógica de termos</li>
+                <li>• GovBrSignatureService - Assinatura</li>
+                <li>• PdfGeneratorService - Geração PDF</li>
+                <li>• DocumentStorageService - Storage</li>
+                <li>• NotificationService - Notificações</li>
+                <li>• AuditoriaService - Auditoria</li>
+                <li>• HashService - Hash SHA-256</li>
+              </ul>
+            </div>
+            <div className="bg-slate-50 rounded-lg p-4">
+              <h4 className="text-sm font-semibold text-slate-700 mb-2">📦 Models</h4>
+              <ul className="text-xs text-slate-600 space-y-1">
+                <li>• User (JWTSubject)</li>
+                <li>• Diocese</li>
+                <li>• Paroquia</li>
+                <li>• Comunidade</li>
+                <li>• Pastoral</li>
+                <li>• Voluntario</li>
+                <li>• Evento</li>
+                <li>• Termo</li>
+                <li>• TermoTemplate</li>
+                <li>• TermoAssinatura</li>
+                <li>• AuditoriaLog</li>
+                <li>• Notificacao</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {tab === 'code' && (
+        <div className="flex gap-4">
+          <div className="w-64 flex-shrink-0">
+            <div className="card p-3 sticky top-0">
+              <h4 className="text-xs font-semibold text-slate-500 uppercase mb-2">Arquivos</h4>
+              <div className="space-y-0.5 max-h-[70vh] overflow-y-auto">
+                <FileTreeItem name="routes/" icon="📁" />
+                <FileTreeItem name="api.php" icon="📄" indent={1} onClick={() => setActiveFile('routes/api.php')} active={activeFile === 'routes/api.php'} />
+                <FileTreeItem name="app/Models/" icon="📁" />
+                <FileTreeItem name="Termo.php" icon="📄" indent={1} onClick={() => setActiveFile('Models/Termo.php')} active={activeFile === 'Models/Termo.php'} />
+                <FileTreeItem name="Voluntario.php" icon="📄" indent={1} onClick={() => setActiveFile('Models/Voluntario.php')} active={activeFile === 'Models/Voluntario.php'} />
+                <FileTreeItem name="User.php" icon="📄" indent={1} onClick={() => setActiveFile('Models/User.php')} active={activeFile === 'Models/User.php'} />
+                <FileTreeItem name="Controllers/Api/" icon="📁" />
+                <FileTreeItem name="TermoController.php" icon="📄" indent={1} onClick={() => setActiveFile('TermoController.php')} active={activeFile === 'TermoController.php'} />
+                <FileTreeItem name="AuthController.php" icon="📄" indent={1} onClick={() => setActiveFile('AuthController.php')} active={activeFile === 'AuthController.php'} />
+                <FileTreeItem name="DashboardController.php" icon="📄" indent={1} onClick={() => setActiveFile('DashboardController.php')} active={activeFile === 'DashboardController.php'} />
+                <FileTreeItem name="Services/" icon="📁" />
+                <FileTreeItem name="GovBrSignatureService.php" icon="📄" indent={1} onClick={() => setActiveFile('GovBrSignatureService.php')} active={activeFile === 'GovBrSignatureService.php'} />
+                <FileTreeItem name="TermoService.php" icon="📄" indent={1} onClick={() => setActiveFile('TermoService.php')} active={activeFile === 'TermoService.php'} />
+                <FileTreeItem name="PdfGeneratorService.php" icon="📄" indent={1} onClick={() => setActiveFile('PdfGeneratorService.php')} active={activeFile === 'PdfGeneratorService.php'} />
+                <FileTreeItem name="AuditoriaService.php" icon="📄" indent={1} onClick={() => setActiveFile('AuditoriaService.php')} active={activeFile === 'AuditoriaService.php'} />
+                <FileTreeItem name="HashService.php" icon="📄" indent={1} onClick={() => setActiveFile('HashService.php')} active={activeFile === 'HashService.php'} />
+                <FileTreeItem name="DocumentStorageService.php" icon="📄" indent={1} onClick={() => setActiveFile('DocumentStorageService.php')} active={activeFile === 'DocumentStorageService.php'} />
+                <FileTreeItem name="database/migrations/" icon="📁" />
+                <FileTreeItem name="create_all_tables.php" icon="📄" indent={1} onClick={() => setActiveFile('migrations')} active={activeFile === 'migrations'} />
+                <FileTreeItem name="config/" icon="📁" />
+                <FileTreeItem name="jwt.php" icon="📄" indent={1} onClick={() => setActiveFile('config/jwt.php')} active={activeFile === 'config/jwt.php'} />
+                <FileTreeItem name="govbr.php" icon="📄" indent={1} onClick={() => setActiveFile('config/govbr.php')} active={activeFile === 'config/govbr.php'} />
+                <FileTreeItem name=".env.example" icon="📄" onClick={() => setActiveFile('.env.example')} active={activeFile === '.env.example'} />
+              </div>
+            </div>
+          </div>
+          <div className="flex-1 min-w-0">
+            {activeFile && files[activeFile] ? (
+              <CodeViewer code={files[activeFile].code} filename={activeFile} language={files[activeFile].lang} />
+            ) : (
+              <div className="card p-12 text-center">
+                <p className="text-slate-400">← Selecione um arquivo para visualizar o código</p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ==================== DATABASE PAGE ====================
+function DatabasePage() {
+  return (
+    <div className="space-y-6">
       <div className="card p-6">
-        <h3 className="text-lg font-semibold text-gray-800 mb-4">🗄️ Modelo de Dados</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <h3 className="font-semibold text-slate-800 mb-4">🗄️ Migrations - SQL Server</h3>
+        <CodeViewer code={laravelMigrations} filename="database/migrations/create_all_tables.php" language="php" />
+      </div>
+
+      <div className="card p-6">
+        <h3 className="font-semibold text-slate-800 mb-4">🔗 Relacionamentos</h3>
+        <CodeViewer code={`
+dioceses
+  └── paroquias (diocese_id FK)
+        ├── comunidades (paroquia_id FK)
+        ├── pastorais (paroquia_id FK, comunidade_id FK nullable)
+        │     └── voluntarios (pastoral_id FK nullable)
+        ├── voluntarios (paroquia_id FK, comunidade_id FK nullable)
+        │     └── termos (voluntario_id FK)
+        ├── eventos (paroquia_id FK, pastoral_id FK nullable)
+        │     └── eventos_voluntarios (evento_id FK, voluntario_id FK)
+        ├── termos (paroquia_id FK, pastoral_id FK nullable, evento_id FK nullable)
+        │     ├── termo_assinaturas (termo_id FK)
+        │     └── auditoria_logs (documento_id = termo.id)
+        ├── termo_templates (paroquia_id FK nullable)
+        └── users (paroquia_id FK nullable)
+`} />
+      </div>
+
+      <div className="card p-6">
+        <h3 className="font-semibold text-slate-800 mb-4">📊 Índices</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {[
-            { name: 'DIOCESES', fields: ['id', 'nome', 'cidade', 'estado'] },
-            { name: 'PAROQUIAS', fields: ['id', 'nome', 'diocese_id', 'endereco', 'padroeiro'] },
-            { name: 'COMUNIDADES', fields: ['id', 'nome', 'paroquia_id', 'endereco'] },
-            { name: 'PASTORAIS', fields: ['id', 'nome', 'paroquia_id', 'comunidade_id', 'coordenador'] },
-            { name: 'VOLUNTARIOS', fields: ['id', 'nome', 'cpf', 'email', 'paroquia_id', 'pastoral_id'] },
-            { name: 'FUNCOES_VOLUNTARIO', fields: ['id', 'nome', 'descricao', 'ativa'] },
-            { name: 'EVENTOS', fields: ['id', 'nome', 'paroquia_id', 'pastoral_id', 'data_inicial', 'data_final'] },
-            { name: 'EVENTOS_VOLUNTARIOS', fields: ['id', 'evento_id', 'voluntario_id', 'funcao_id'] },
-            { name: 'TERMOS', fields: ['id', 'codigo', 'tipo', 'voluntario_id', 'status', 'hash'] },
-            { name: 'TERMOS_TEMPLATES', fields: ['id', 'nome', 'tipo', 'conteudo', 'versao', 'ativa'] },
-            { name: 'TERMOS_ASSINATURAS', fields: ['id', 'termo_id', 'govbr_id', 'status', 'hash'] },
-            { name: 'TERMOS_AUDITORIA', fields: ['id', 'usuario', 'acao', 'documento_id', 'data_hora'] },
-            { name: 'NOTIFICACOES', fields: ['id', 'destinatario_id', 'tipo', 'assunto', 'mensagem'] },
-            { name: 'USUARIOS', fields: ['id', 'nome', 'email', 'perfil', 'paroquia_id'] },
-            { name: 'CONFIGURACOES', fields: ['id', 'paroquia_id', 'chave', 'valor'] },
-          ].map(table => (
-            <div key={table.name} className="bg-gray-50 rounded-lg p-3">
-              <h4 className="text-xs font-bold text-primary-700 uppercase">{table.name}</h4>
+            { table: 'termos', indexes: ['paroquia_id', 'voluntario_id', 'status', 'codigo', '(data_fim, status)'] },
+            { table: 'voluntarios', indexes: ['paroquia_id', 'pastoral_id', 'status', 'cpf (unique)'] },
+            { table: 'eventos', indexes: ['paroquia_id', 'status'] },
+            { table: 'auditoria_logs', indexes: ['documento_id', 'acao', 'data_hora'] },
+            { table: 'termo_assinaturas', indexes: ['termo_id', 'status'] },
+            { table: 'notificacoes', indexes: ['destinatario_id', 'lida'] },
+          ].map(t => (
+            <div key={t.table} className="bg-slate-50 rounded-lg p-3">
+              <h4 className="text-xs font-bold text-slate-700 uppercase">{t.table}</h4>
               <div className="mt-2 space-y-0.5">
-                {table.fields.map(f => (
-                  <p key={f} className="text-xs text-gray-600 font-mono">{f}</p>
+                {t.indexes.map(idx => (
+                  <p key={idx} className="text-xs text-slate-600 font-mono">📌 {idx}</p>
                 ))}
               </div>
             </div>
           ))}
         </div>
       </div>
+    </div>
+  );
+}
 
-      {/* Gov.br Integration */}
-      <div className="card p-6 border-blue-200 bg-blue-50">
-        <h3 className="text-lg font-semibold text-blue-800 mb-4">🔐 Integração Assinatura Eletrônica gov.br</h3>
-        <div className="space-y-4">
-          <div className="bg-white rounded-lg p-4 border border-blue-200">
-            <h4 className="text-sm font-semibold text-gray-800 mb-2">Fluxo Oficial (documentação ITI/gov.br):</h4>
-            <ol className="text-xs text-gray-700 space-y-2 list-decimal list-inside">
-              <li><strong>Autenticação:</strong> Login Único gov.br (OAuth 2.0) - conta Prata/Ouro obrigatória</li>
-              <li><strong>Autorização:</strong> <code className="bg-gray-100 px-1 rounded">cas.iti.br/oauth2.0/authorize</code> com scope=sign</li>
-              <li><strong>Access Token:</strong> POST <code className="bg-gray-100 px-1 rounded">cas.iti.br/oauth2.0/token</code></li>
-              <li><strong>Certificado:</strong> GET <code className="bg-gray-100 px-1 rounded">assinatura-api.iti.br/externo/v2/certificadoPublico</code></li>
-              <li><strong>Assinatura:</strong> POST <code className="bg-gray-100 px-1 rounded">assinatura-api.iti.br/externo/v2/assinarPKCS7</code> com hash SHA-256</li>
-              <li><strong>Resultado:</strong> Pacote PKCS#7 com assinatura digital avançada</li>
-            </ol>
-          </div>
-          <div className="bg-white rounded-lg p-4 border border-blue-200">
-            <h4 className="text-sm font-semibold text-gray-800 mb-2">Interface IGovBrSignatureService:</h4>
-            <pre className="text-xs font-mono text-gray-700 bg-gray-50 p-3 rounded overflow-x-auto">{`interface IGovBrSignatureService {
-  // Redireciona para OAuth gov.br e obtém authorization code
-  criarSolicitacaoAssinatura(termoId: string, hash: string): Promise<string>;
-  
-  // Consulta status da assinatura
-  obterStatusAssinatura(signatureId: string): Promise<StatusTermo>;
-  
-  // Cancela solicitação pendente
-  cancelarSolicitacaoAssinatura(signatureId: string): Promise<void>;
-  
-  // Obtém PKCS#7 com assinatura para incorporar no PDF
-  obterDocumentoAssinado(signatureId: string): Promise<Blob>;
-  
-  // Valida assinatura via ITI (validar.iti.gov.br)
-  validarAssinatura(signatureId: string): Promise<boolean>;
-}`}</pre>
-          </div>
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-            <p className="text-xs text-yellow-800"><strong>⚠️ Nota Importante:</strong> A API de Assinatura Eletrônica do gov.br é destinada a órgãos públicos. Para utilização por uma paróquia, é necessário que o sistema esteja hospedado em domínio oficial ou que a integração seja realizada através da Diocese/Cúria que possui credenciais. A arquitetura está preparada para essa integração quando as credenciais forem obtidas.</p>
-          </div>
-        </div>
+// ==================== API PAGE ====================
+function ApiPage() {
+  return (
+    <div className="space-y-6">
+      <div className="card p-6">
+        <h3 className="font-semibold text-slate-800 mb-4">🌐 Rotas da API REST</h3>
+        <CodeViewer code={laravelRoutes} filename="routes/api.php" language="php" />
       </div>
 
-      {/* API Endpoints */}
       <div className="card p-6">
-        <h3 className="text-lg font-semibold text-gray-800 mb-4">🌐 API REST - Endpoints</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <h3 className="font-semibold text-slate-800 mb-4">📋 Endpoints Detalhados</h3>
+        <div className="space-y-4">
           {[
-            { method: 'POST', path: '/api/voluntarios', desc: 'Criar voluntário' },
-            { method: 'GET', path: '/api/voluntarios', desc: 'Listar voluntários' },
-            { method: 'GET', path: '/api/voluntarios/{id}', desc: 'Detalhar voluntário' },
-            { method: 'POST', path: '/api/pastorais', desc: 'Criar pastoral' },
-            { method: 'GET', path: '/api/pastorais', desc: 'Listar pastorais' },
-            { method: 'POST', path: '/api/eventos', desc: 'Criar evento' },
-            { method: 'GET', path: '/api/eventos', desc: 'Listar eventos' },
-            { method: 'POST', path: '/api/termos/anual', desc: 'Criar termo anual' },
-            { method: 'POST', path: '/api/termos/evento', desc: 'Criar termo de evento' },
-            { method: 'GET', path: '/api/termos/{id}', desc: 'Detalhar termo' },
-            { method: 'POST', path: '/api/termos/{id}/gerar', desc: 'Gerar PDF' },
-            { method: 'POST', path: '/api/termos/{id}/solicitar-assinatura', desc: 'Solicitar assinatura' },
-            { method: 'GET', path: '/api/termos/{id}/assinatura/status', desc: 'Status assinatura' },
-            { method: 'POST', path: '/api/termos/{id}/renovar', desc: 'Renovar termo' },
-            { method: 'GET', path: '/api/termos/{id}/pdf', desc: 'Download PDF' },
-            { method: 'GET', path: '/api/validacao/{codigo}', desc: 'Validar termo' },
-          ].map((ep, i) => (
-            <div key={i} className="flex items-center gap-2 p-2 bg-gray-50 rounded text-xs">
-              <span className={`px-2 py-0.5 rounded font-bold text-white ${ep.method === 'GET' ? 'bg-green-500' : 'bg-blue-500'}`}>{ep.method}</span>
-              <span className="font-mono text-gray-700">{ep.path}</span>
-              <span className="text-gray-400 ml-auto">{ep.desc}</span>
+            { group: 'Autenticação', endpoints: [
+              { method: 'POST', path: '/api/v1/auth/login', desc: 'Login - retorna JWT token', auth: false },
+              { method: 'POST', path: '/api/v1/auth/logout', desc: 'Logout - invalida token', auth: true },
+              { method: 'POST', path: '/api/v1/auth/refresh', desc: 'Refresh JWT token', auth: true },
+              { method: 'GET', path: '/api/v1/auth/me', desc: 'Dados do usuário autenticado', auth: true },
+            ]},
+            { group: 'Voluntários', endpoints: [
+              { method: 'GET', path: '/api/v1/voluntarios', desc: 'Listar (com filtros)', auth: true },
+              { method: 'POST', path: '/api/v1/voluntarios', desc: 'Criar voluntário', auth: true },
+              { method: 'GET', path: '/api/v1/voluntarios/{id}', desc: 'Detalhar voluntário', auth: true },
+              { method: 'PUT', path: '/api/v1/voluntarios/{id}', desc: 'Atualizar voluntário', auth: true },
+              { method: 'DELETE', path: '/api/v1/voluntarios/{id}', desc: 'Remover (soft delete)', auth: true },
+              { method: 'GET', path: '/api/v1/voluntarios/{id}/termos', desc: 'Termos do voluntário', auth: true },
+            ]},
+            { group: 'Pastorais', endpoints: [
+              { method: 'GET', path: '/api/v1/pastorais', desc: 'Listar pastorais', auth: true },
+              { method: 'POST', path: '/api/v1/pastorais', desc: 'Criar pastoral', auth: true },
+              { method: 'GET', path: '/api/v1/pastorais/{id}', desc: 'Detalhar pastoral', auth: true },
+              { method: 'PUT', path: '/api/v1/pastorais/{id}', desc: 'Atualizar pastoral', auth: true },
+              { method: 'DELETE', path: '/api/v1/pastorais/{id}', desc: 'Remover pastoral', auth: true },
+              { method: 'GET', path: '/api/v1/pastorais/{id}/voluntarios', desc: 'Voluntários da pastoral', auth: true },
+            ]},
+            { group: 'Eventos', endpoints: [
+              { method: 'GET', path: '/api/v1/eventos', desc: 'Listar eventos', auth: true },
+              { method: 'POST', path: '/api/v1/eventos', desc: 'Criar evento', auth: true },
+              { method: 'GET', path: '/api/v1/eventos/{id}', desc: 'Detalhar evento', auth: true },
+              { method: 'PUT', path: '/api/v1/eventos/{id}', desc: 'Atualizar evento', auth: true },
+              { method: 'DELETE', path: '/api/v1/eventos/{id}', desc: 'Remover evento', auth: true },
+              { method: 'POST', path: '/api/v1/eventos/{id}/voluntarios', desc: 'Vincular voluntário', auth: true },
+            ]},
+            { group: 'Termos', endpoints: [
+              { method: 'GET', path: '/api/v1/termos', desc: 'Listar termos (filtros)', auth: true },
+              { method: 'POST', path: '/api/v1/termos/anual', desc: 'Criar termo anual', auth: true },
+              { method: 'POST', path: '/api/v1/termos/evento', desc: 'Criar termo de evento', auth: true },
+              { method: 'GET', path: '/api/v1/termos/{id}', desc: 'Detalhar termo', auth: true },
+              { method: 'POST', path: '/api/v1/termos/{id}/gerar', desc: 'Gerar PDF', auth: true },
+              { method: 'POST', path: '/api/v1/termos/{id}/solicitar-assinatura', desc: 'Solicitar assinatura gov.br', auth: true },
+              { method: 'GET', path: '/api/v1/termos/{id}/assinatura/status', desc: 'Status da assinatura', auth: true },
+              { method: 'POST', path: '/api/v1/termos/{id}/cancelar', desc: 'Cancelar termo', auth: true },
+              { method: 'POST', path: '/api/v1/termos/{id}/renovar', desc: 'Renovar termo', auth: true },
+              { method: 'GET', path: '/api/v1/termos/{id}/pdf', desc: 'Download PDF', auth: true },
+              { method: 'GET', path: '/api/v1/termos/{id}/auditoria', desc: 'Auditoria do termo', auth: true },
+              { method: 'GET', path: '/api/v1/termos/assinatura/callback', desc: 'Callback gov.br OAuth', auth: false },
+            ]},
+            { group: 'Templates', endpoints: [
+              { method: 'GET', path: '/api/v1/templates', desc: 'Listar templates', auth: true },
+              { method: 'POST', path: '/api/v1/templates', desc: 'Criar template', auth: true },
+              { method: 'GET', path: '/api/v1/templates/{id}', desc: 'Detalhar template', auth: true },
+              { method: 'PUT', path: '/api/v1/templates/{id}', desc: 'Atualizar template', auth: true },
+              { method: 'POST', path: '/api/v1/templates/{id}/ativar', desc: 'Ativar template', auth: true },
+              { method: 'POST', path: '/api/v1/templates/{id}/desativar', desc: 'Desativar template', auth: true },
+            ]},
+            { group: 'Validação (Pública)', endpoints: [
+              { method: 'GET', path: '/api/v1/validacao/{codigo}', desc: 'Validar termo por código', auth: false },
+            ]},
+            { group: 'Dashboard & Auditoria', endpoints: [
+              { method: 'GET', path: '/api/v1/dashboard', desc: 'Estatísticas do dashboard', auth: true },
+              { method: 'GET', path: '/api/v1/auditoria', desc: 'Logs de auditoria', auth: true },
+            ]},
+          ].map(group => (
+            <div key={group.group}>
+              <h4 className="text-sm font-semibold text-slate-700 mb-2">{group.group}</h4>
+              <div className="space-y-1">
+                {group.endpoints.map((ep, i) => (
+                  <div key={i} className="flex items-center gap-2 p-2 bg-slate-50 rounded text-xs">
+                    <span className={`px-2 py-0.5 rounded font-bold text-white min-w-[50px] text-center ${
+                      ep.method === 'GET' ? 'bg-green-500' : ep.method === 'POST' ? 'bg-blue-500' : ep.method === 'PUT' ? 'bg-yellow-500' : 'bg-red-500'
+                    }`}>{ep.method}</span>
+                    <span className="font-mono text-slate-700 flex-1">{ep.path}</span>
+                    <span className="text-slate-400">{ep.desc}</span>
+                    {ep.auth && <span className="badge bg-amber-100 text-amber-700">🔒 JWT</span>}
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ==================== GOV.BR PAGE ====================
+function GovBrPage() {
+  return (
+    <div className="space-y-6">
+      <div className="card p-6 border-blue-200 bg-blue-50">
+        <h3 className="text-lg font-semibold text-blue-800 mb-2">🔐 Integração Assinatura Eletrônica gov.br</h3>
+        <p className="text-sm text-blue-700">
+          Baseado na documentação oficial: <a href="https://manual-integracao-assinatura-eletronica.servicos.gov.br/" target="_blank" className="underline">manual-integracao-assinatura-eletronica.servicos.gov.br</a>
+        </p>
+      </div>
+
+      <div className="card p-6">
+        <h3 className="font-semibold text-slate-800 mb-4">📋 Fluxo Oficial de Integração</h3>
+        <div className="space-y-3">
+          {[
+            { step: 1, title: 'Credenciamento', desc: 'Gestor Público solicita credenciais via Serviço de Integração aos Produtos do Ecossistema da Conta Digital GOV.BR' },
+            { step: 2, title: 'Autenticação OAuth 2.0', desc: 'Redirecionar usuário para: cas.iti.br/oauth2.0/authorize com scope=sign e conta Prata/Ouro' },
+            { step: 3, title: 'Authorization Code', desc: 'gov.br retorna código de autorização via redirect_uri cadastrado' },
+            { step: 4, title: 'Access Token', desc: 'POST cas.iti.br/oauth2.0/token trocando code por access_token' },
+            { step: 5, title: 'Certificado Público', desc: 'GET assinatura-api.iti.br/externo/v2/certificadoPublico com Bearer token' },
+            { step: 6, title: 'Assinatura PKCS#7', desc: 'POST assinatura-api.iti.br/externo/v2/assinarPKCS7 com hash SHA-256 do documento' },
+            { step: 7, title: 'Incorporar no PDF', desc: 'Pacote PKCS#7 retornado é incorporado ao PDF como assinatura digital' },
+            { step: 8, title: 'Validação', desc: 'Documento pode ser validado em validar.iti.gov.br (produção) ou validar.staging.iti.br (homologação)' },
+          ].map(s => (
+            <div key={s.step} className="flex gap-4 items-start">
+              <div className="w-8 h-8 bg-primary-600 text-white rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0">{s.step}</div>
+              <div>
+                <p className="text-sm font-semibold text-slate-800">{s.title}</p>
+                <p className="text-xs text-slate-600">{s.desc}</p>
+              </div>
             </div>
           ))}
         </div>
       </div>
 
-      {/* Security & LGPD */}
+      <div className="card p-6">
+        <h3 className="font-semibold text-slate-800 mb-4">💻 GovBrSignatureService (Laravel)</h3>
+        <CodeViewer code={laravelServices.govBrSignatureService} filename="app/Services/GovBrSignatureService.php" language="php" />
+      </div>
+
+      <div className="card p-6">
+        <h3 className="font-semibold text-slate-800 mb-4">🔧 Configuração</h3>
+        <CodeViewer code={laravelConfig.govbr} filename="config/govbr.php" language="php" />
+      </div>
+
+      <div className="card p-6 bg-yellow-50 border-yellow-200">
+        <h3 className="font-semibold text-yellow-800 mb-2">⚠️ Requisitos Importantes</h3>
+        <ul className="text-sm text-yellow-700 space-y-2">
+          <li>• A API de Assinatura Eletrônica do gov.br é destinada a <strong>órgãos públicos</strong>.</li>
+          <li>• Para uso por paróquias, é necessário credenciamento via <strong>Diocese/Cúria</strong> com domínio oficial.</li>
+          <li>• O usuário precisa de conta gov.br nível <strong>Prata ou Ouro</strong>.</li>
+          <li>• A aplicação deve estar hospedada em domínio oficial (gov.br, edu.br, etc.) para produção.</li>
+          <li>• Em homologação, usar ambiente staging: sso.staging.acesso.gov.br</li>
+          <li>• A arquitetura está preparada para integração quando credenciais forem obtidas.</li>
+        </ul>
+      </div>
+
+      <div className="card p-6">
+        <h3 className="font-semibold text-slate-800 mb-4">🔄 Escopos Disponíveis</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="bg-slate-50 rounded-lg p-4">
+            <h4 className="text-sm font-bold text-slate-700">sign</h4>
+            <p className="text-xs text-slate-600 mt-1">Token de uso único. Permite assinar um único hash. Ideal para assinatura individual de documentos.</p>
+          </div>
+          <div className="bg-slate-50 rounded-lg p-4">
+            <h4 className="text-sm font-bold text-slate-700">signature_session</h4>
+            <p className="text-xs text-slate-600 mt-1">Token reutilizável. Permite múltiplas assinaturas em lote durante a validade do token.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ==================== SECURITY PAGE ====================
+function SecurityPage() {
+  return (
+    <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="card p-6">
-          <h3 className="text-lg font-semibold text-gray-800 mb-4">🔒 Segurança</h3>
-          <ul className="text-sm text-gray-700 space-y-2">
-            <li className="flex items-start gap-2"><span className="text-green-500">✓</span> Autenticação JWT com Laravel</li>
-            <li className="flex items-start gap-2"><span className="text-green-500">✓</span> Controle por perfil (RBAC)</li>
+          <h3 className="font-semibold text-slate-800 mb-4">🔒 Segurança</h3>
+          <ul className="text-sm text-slate-700 space-y-2">
+            <li className="flex items-start gap-2"><span className="text-green-500">✓</span> Autenticação JWT (tymon/jwt-auth)</li>
+            <li className="flex items-start gap-2"><span className="text-green-500">✓</span> Controle por perfil (RBAC) com Guards</li>
             <li className="flex items-start gap-2"><span className="text-green-500">✓</span> Isolamento por paróquia (multi-tenant)</li>
+            <li className="flex items-start gap-2"><span className="text-green-500">✓</span> Middleware SetParoquiaContext</li>
             <li className="flex items-start gap-2"><span className="text-green-500">✓</span> Criptografia de dados sensíveis</li>
             <li className="flex items-start gap-2"><span className="text-green-500">✓</span> URLs temporárias para documentos</li>
             <li className="flex items-start gap-2"><span className="text-green-500">✓</span> Hash SHA-256 para integridade</li>
             <li className="flex items-start gap-2"><span className="text-green-500">✓</span> Logs de auditoria imutáveis</li>
             <li className="flex items-start gap-2"><span className="text-green-500">✓</span> Validação de uploads</li>
+            <li className="flex items-start gap-2"><span className="text-green-500">✓</span> Soft deletes para rastreabilidade</li>
+            <li className="flex items-start gap-2"><span className="text-green-500">✓</span> CORS configurado</li>
+            <li className="flex items-start gap-2"><span className="text-green-500">✓</span> Rate limiting</li>
           </ul>
         </div>
         <div className="card p-6">
-          <h3 className="text-lg font-semibold text-gray-800 mb-4">📋 LGPD</h3>
-          <ul className="text-sm text-gray-700 space-y-2">
+          <h3 className="font-semibold text-slate-800 mb-4">📋 LGPD - Lei 13.709/2018</h3>
+          <ul className="text-sm text-slate-700 space-y-2">
             <li className="flex items-start gap-2"><span className="text-green-500">✓</span> Minimização de dados</li>
             <li className="flex items-start gap-2"><span className="text-green-500">✓</span> Finalidade definida e transparente</li>
             <li className="flex items-start gap-2"><span className="text-green-500">✓</span> Controle de acesso por perfil</li>
             <li className="flex items-start gap-2"><span className="text-green-500">✓</span> Política de retenção documental</li>
-            <li className="flex items-start gap-2"><span className="text-green-500">✓</span> Histórico de operações</li>
+            <li className="flex items-start gap-2"><span className="text-green-500">✓</span> Histórico completo de operações</li>
             <li className="flex items-start gap-2"><span className="text-green-500">✓</span> Consentimento para uso de imagem</li>
-            <li className="flex items-start gap-2"><span className="text-green-500">✓</span> Eliminação quando aplicável</li>
+            <li className="flex items-start gap-2"><span className="text-green-500">✓</span> Eliminação quando juridicamente aplicável</li>
             <li className="flex items-start gap-2"><span className="text-green-500">✓</span> Registro de tratamento (Art. 37)</li>
+            <li className="flex items-start gap-2"><span className="text-green-500">✓</span> Dados sensíveis protegidos</li>
+            <li className="flex items-start gap-2"><span className="text-green-500">✓</span> CPF formatado e validado</li>
+            <li className="flex items-start gap-2"><span className="text-green-500">✓</span> Auditoria de acesso a documentos</li>
+            <li className="flex items-start gap-2"><span className="text-green-500">✓</span> Cláusula LGPD nos templates</li>
           </ul>
         </div>
       </div>
 
-      {/* Document Flow */}
       <div className="card p-6">
-        <h3 className="text-lg font-semibold text-gray-800 mb-4">📄 Fluxo de Geração e Assinatura</h3>
-        <div className="flex flex-wrap items-center gap-2 text-xs">
-          {['Criar Termo', '→', 'Gerar PDF', '→', 'Calcular Hash', '→', 'Salvar Versão', '→', 'Solicitar Assinatura', '→', 'Autenticação gov.br', '→', 'Assinar PKCS#7', '→', 'Incorporar no PDF', '→', 'Documento Final', '→', 'Armazenar', '→', 'Auditar'].map((step, i) => (
-            step === '→' 
-              ? <span key={i} className="text-gray-400">→</span>
-              : <span key={i} className="bg-primary-50 text-primary-700 px-2 py-1 rounded font-medium">{step}</span>
-          ))}
+        <h3 className="font-semibold text-slate-800 mb-4">🔐 Fluxo de Autenticação JWT</h3>
+        <CodeViewer code={`
+1. POST /api/v1/auth/login { email, password }
+   → Valida credenciais
+   → Gera JWT com claims: { sub, perfil, paroquia_id, nome }
+   → Retorna: { token, token_type, expires_in, user }
+
+2. Requests subsequentes:
+   → Header: Authorization: Bearer {token}
+   → JwtAuthenticate middleware valida token
+   → SetParoquiaContext middleware define contexto
+
+3. Refresh:
+   → POST /api/v1/auth/refresh
+   → Retorna novo token
+   → TTL: 60 min, Refresh TTL: 14 dias
+
+4. Logout:
+   → POST /api/v1/auth/logout
+   → Token é colocado na blacklist
+`} />
+      </div>
+
+      <div className="card p-6">
+        <h3 className="font-semibold text-slate-800 mb-4">🛡️ Middleware de Controle de Acesso</h3>
+        <CodeViewer code={`<?php
+// app/Http/Middleware/CheckPerfil.php
+namespace App\\Http\\Middleware;
+
+use Closure;
+use Illuminate\\Http\\Request;
+use Illuminate\\Support\\Facades\\Auth;
+
+class CheckPerfil
+{
+    public function handle(Request $request, Closure $next, ...$perfis)
+    {
+        $user = Auth::user();
+
+        if (!$user || !$user->hasAnyPerfil($perfis)) {
+            abort(403, 'Acesso negado. Perfil não autorizado.');
+        }
+
+        return $next($request);
+    }
+}
+
+// app/Http/Middleware/SetParoquiaContext.php
+namespace App\\Http\\Middleware;
+
+use Closure;
+use Illuminate\\Http\\Request;
+use Illuminate\\Support\\Facades\\Auth;
+
+class SetParoquiaContext
+{
+    public function handle(Request $request, Closure $next)
+    {
+        $user = Auth::user();
+
+        if ($user->perfil === 'ADMIN_DIOCESE') {
+            // Admin de diocese pode acessar qualquer paróquia
+            $paroquiaId = $request->header('X-Paroquia-Id') ?? $user->paroquia_id;
+        } else {
+            // Demais perfis são limitados à sua paróquia
+            $paroquiaId = $user->paroquia_id;
+        }
+
+        $request->attributes->set('paroquia_id', $paroquiaId);
+
+        return $next($request);
+    }
+}`} filename="app/Http/Middleware/" language="php" />
+      </div>
+    </div>
+  );
+}
+
+// ==================== INSTALL PAGE ====================
+function InstallPage() {
+  return (
+    <div className="space-y-6">
+      <div className="card p-6">
+        <h3 className="font-semibold text-slate-800 mb-4">⚙️ Instalação do Backend (Laravel)</h3>
+        <CodeViewer code={`# 1. Clonar o repositório
+git clone https://github.com/paroquia/voluntariado-paroquial-api.git
+cd voluntariado-paroquial-api
+
+# 2. Instalar dependências
+composer install
+
+# 3. Configurar ambiente
+cp .env.example .env
+php artisan key:generate
+
+# 4. Configurar banco de dados (SQL Server)
+# Editar .env com credenciais do SQL Server
+
+# 5. Configurar JWT
+php artisan jwt:secret
+
+# 6. Executar migrations
+php artisan migrate
+
+# 7. Criar seeders (opcional)
+php artisan db:seed
+
+# 8. Iniciar servidor
+php artisan serve
+
+# 9. Iniciar queue worker (para jobs)
+php artisan queue:work`} filename="terminal" />
+      </div>
+
+      <div className="card p-6">
+        <h3 className="font-semibold text-slate-800 mb-4">⚙️ Instalação do Frontend (Angular)</h3>
+        <CodeViewer code={`# 1. Instalar Angular CLI (se ainda não tiver)
+npm install -g @angular/cli
+
+# 2. Clonar o repositório
+git clone https://github.com/paroquia/voluntariado-paroquial-frontend.git
+cd voluntariado-paroquial-frontend
+
+# 3. Instalar dependências
+npm install
+
+# 4. Configurar ambiente
+# Editar src/environments/environment.ts com URL da API
+
+# 5. Iniciar servidor de desenvolvimento
+ng serve
+
+# 6. Acessar em http://localhost:4200
+
+# Build para produção
+ng build --configuration production`} filename="terminal" />
+      </div>
+
+      <div className="card p-6">
+        <h3 className="font-semibold text-slate-800 mb-4">📦 Dependências do Backend</h3>
+        <CodeViewer code={`// composer.json - dependências principais
+{
+    "require": {
+        "php": "^8.2",
+        "laravel/framework": "^11.0",
+        "tymon/jwt-auth": "^2.0",
+        "barryvdh/laravel-dompdf": "^2.0",
+        "league/flysystem-aws-s3-v3": "^3.0",
+        "azure-oss/storage-blob": "^1.0",
+        "guzzlehttp/guzzle": "^7.0"
+    },
+    "require-dev": {
+        "fakerphp/faker": "^1.23",
+        "laravel/pint": "^1.0",
+        "mockery/mockery": "^1.6",
+        "phpunit/phpunit": "^11.0"
+    }
+}`} filename="composer.json" />
+      </div>
+
+      <div className="card p-6">
+        <h3 className="font-semibold text-slate-800 mb-4">📦 Dependências do Frontend</h3>
+        <CodeViewer code={`// package.json - dependências principais
+{
+    "dependencies": {
+        "@angular/animations": "^17.0.0",
+        "@angular/common": "^17.0.0",
+        "@angular/compiler": "^17.0.0",
+        "@angular/core": "^17.0.0",
+        "@angular/forms": "^17.0.0",
+        "@angular/platform-browser": "^17.0.0",
+        "@angular/platform-browser-dynamic": "^17.0.0",
+        "@angular/router": "^17.0.0",
+        "rxjs": "~7.8.0",
+        "tslib": "^2.3.0",
+        "zone.js": "~0.14.0"
+    },
+    "devDependencies": {
+        "@angular-devkit/build-angular": "^17.0.0",
+        "@angular/cli": "^17.0.0",
+        "@angular/compiler-cli": "^17.0.0",
+        "typescript": "~5.2.0",
+        "tailwindcss": "^3.4.0"
+    }
+}`} filename="package.json" />
+      </div>
+
+      <div className="card p-6">
+        <h3 className="font-semibold text-slate-800 mb-4">🚀 Deploy</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="bg-slate-50 rounded-lg p-4">
+            <h4 className="text-sm font-bold text-slate-700 mb-2">Backend</h4>
+            <ul className="text-xs text-slate-600 space-y-1">
+              <li>• PHP 8.2+ com extensões necessárias</li>
+              <li>• SQL Server 2019+</li>
+              <li>• Nginx/Apache com PHP-FPM</li>
+              <li>• Supervisor para queue workers</li>
+              <li>• Cron para jobs agendados</li>
+              <li>• SSL/TLS obrigatório</li>
+            </ul>
+          </div>
+          <div className="bg-slate-50 rounded-lg p-4">
+            <h4 className="text-sm font-bold text-slate-700 mb-2">Frontend</h4>
+            <ul className="text-xs text-slate-600 space-y-1">
+              <li>• Node.js 18+ para build</li>
+              <li>• Nginx para servir arquivos estáticos</li>
+              <li>• CDN para assets</li>
+              <li>• Service Worker (PWA opcional)</li>
+              <li>• SSL/TLS obrigatório</li>
+            </ul>
+          </div>
         </div>
       </div>
 
-      {/* Status Flow */}
-      <div className="card p-6">
-        <h3 className="text-lg font-semibold text-gray-800 mb-4">🔄 Ciclo de Vida do Termo</h3>
-        <div className="flex flex-wrap items-center gap-2 text-xs">
-          {(['RASCUNHO', 'GERADO', 'AGUARDANDO_ASSINATURA', 'ASSINATURA_EM_ANDAMENTO', 'ASSINADO'] as const).map((s, i) => (
-            <span key={s} className="flex items-center gap-2">
-              {i > 0 && <span className="text-gray-400">→</span>}
-              <span className={`badge ${getStatusColor(s)}`}>{getStatusIcon(s)} {s.replace(/_/g, ' ')}</span>
-            </span>
-          ))}
-        </div>
-        <p className="text-xs text-gray-500 mt-3">Status alternativos: RECUSADO | CANCELADO | EXPIRADO | ERRO_ASSINATURA</p>
-      </div>
-
-      {/* Tech Stack */}
-      <div className="card p-6">
-        <h3 className="text-lg font-semibold text-gray-800 mb-4">⚙️ Stack Tecnológica</h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {[
-            { label: 'Frontend', value: 'React + Tailwind CSS', icon: '🎨' },
-            { label: 'Backend', value: 'Laravel + JWT', icon: '⚡' },
-            { label: 'Banco', value: 'SQL Server + EF Core', icon: '🗄️' },
-            { label: 'PDF', value: 'DomPDF / TCPDF', icon: '📄' },
-            { label: 'Assinatura', value: 'API gov.br (ITI)', icon: '🔐' },
-            { label: 'Storage', value: 'S3 / Azure Blob', icon: '☁️' },
-            { label: 'Notificações', value: 'SMTP + Push', icon: '🔔' },
-            { label: 'Queue', value: 'Laravel Queue', icon: '📨' },
-          ].map(tech => (
-            <div key={tech.label} className="bg-gray-50 rounded-lg p-3 text-center">
-              <span className="text-2xl">{tech.icon}</span>
-              <p className="text-xs font-semibold text-gray-700 mt-1">{tech.label}</p>
-              <p className="text-xs text-gray-500">{tech.value}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Multi-tenant */}
-      <div className="card p-6">
-        <h3 className="text-lg font-semibold text-gray-800 mb-4">🏛️ Evolução Multi-Instituição</h3>
-        <pre className="text-xs font-mono text-gray-700 bg-gray-50 p-4 rounded overflow-x-auto">{`
-Diocese
-└── Paróquias (multi-tenant)
-    ├── Comunidades
-    ├── Pastorais
-    │   └── Voluntários
-    │       └── Termos (TVP-YYYY-NNNNNN)
-    ├── Eventos
-    │   └── Termos (TVE-YYYY-NNNNNN)
-    ├── Templates
-    └── Configurações
-        `}</pre>
+      <div className="card p-6 bg-green-50 border-green-200">
+        <h3 className="font-semibold text-green-800 mb-2">✅ Checklist de Produção</h3>
+        <ul className="text-sm text-green-700 space-y-1">
+          <li>☐ Variáveis de ambiente configuradas</li>
+          <li>☐ JWT_SECRET gerado e seguro</li>
+          <li>☐ APP_DEBUG=false em produção</li>
+          <li>☐ CORS configurado para domínio do frontend</li>
+          <li>☐ SSL/TLS ativo em ambos os serviços</li>
+          <li>☐ Credenciais gov.br obtidas e configuradas</li>
+          <li>☐ Storage configurado (S3/Azure/Local)</li>
+          <li>☐ Backup automático do banco de dados</li>
+          <li>☐ Monitoramento de logs configurado</li>
+          <li>☐ Rate limiting ativo</li>
+          <li>☐ Política de retenção documental definida</li>
+        </ul>
       </div>
     </div>
   );
