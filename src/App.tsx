@@ -1,23 +1,20 @@
 import { useState } from 'react';
-import { angularStructure, angularCore, angularFeatures, angularShared, angularEnvironment } from './data/angularCode';
-import { laravelStructure, laravelRoutes, laravelModels, laravelControllers, laravelServices, laravelMigrations, laravelConfig } from './data/laravelCode';
 
 type Page = 'overview' | 'angular' | 'laravel' | 'database' | 'api' | 'govbr' | 'security' | 'install';
 
 export default function App() {
   const [currentPage, setCurrentPage] = useState<Page>('overview');
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [activeFile, setActiveFile] = useState<string>('');
 
-  const menuItems: { id: Page; label: string; icon: string; section?: string }[] = [
-    { id: 'overview', label: 'Visão Geral', icon: '🏠', section: 'DOCUMENTAÇÃO' },
-    { id: 'angular', label: 'Frontend Angular', icon: '🅰️', section: 'CÓDIGO-FONTE' },
+  const menuItems: { id: Page; label: string; icon: string }[] = [
+    { id: 'overview', label: 'Visão Geral', icon: '🏠' },
+    { id: 'angular', label: 'Frontend Angular', icon: '🅰️' },
     { id: 'laravel', label: 'Backend Laravel', icon: '🔺' },
     { id: 'database', label: 'Banco de Dados', icon: '🗄️' },
     { id: 'api', label: 'API REST', icon: '🌐' },
-    { id: 'govbr', label: 'Integração gov.br', icon: '🔐', section: 'INTEGRAÇÕES' },
+    { id: 'govbr', label: 'Integração gov.br', icon: '🔐' },
     { id: 'security', label: 'Segurança & LGPD', icon: '🛡️' },
-    { id: 'install', label: 'Instalação', icon: '⚙️', section: 'DEPLOY' },
+    { id: 'install', label: 'Instalação', icon: '⚙️' },
   ];
 
   return (
@@ -26,7 +23,7 @@ export default function App() {
       <aside className={`${sidebarOpen ? 'w-64' : 'w-16'} bg-white border-r border-slate-200 flex flex-col transition-all duration-300 flex-shrink-0`}>
         <div className="p-4 border-b border-slate-200">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 bg-gradient-to-br from-primary-600 to-primary-800 rounded-lg flex items-center justify-center flex-shrink-0">
+            <div className="w-9 h-9 bg-gradient-to-br from-blue-600 to-blue-800 rounded-lg flex items-center justify-center flex-shrink-0">
               <span className="text-white text-sm font-bold">✝</span>
             </div>
             {sidebarOpen && (
@@ -37,30 +34,22 @@ export default function App() {
             )}
           </div>
         </div>
-        <nav className="flex-1 p-2 space-y-0.5 overflow-y-auto">
-          {menuItems.map((item, idx) => (
-            <div key={item.id}>
-              {item.section && (
-                <div className="sidebar-section mt-3 first:mt-0">{sidebarOpen ? item.section : ''}</div>
-              )}
-              <button
-                onClick={() => { setCurrentPage(item.id); setActiveFile(''); }}
-                className={`sidebar-link w-full text-left ${currentPage === item.id ? 'active' : 'text-slate-600'}`}
-              >
-                <span className="text-base flex-shrink-0">{item.icon}</span>
-                {sidebarOpen && <span className="truncate">{item.label}</span>}
-              </button>
-            </div>
+        <nav className="flex-1 p-2 space-y-1 overflow-y-auto">
+          {menuItems.map(item => (
+            <button
+              key={item.id}
+              onClick={() => setCurrentPage(item.id)}
+              className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                currentPage === item.id 
+                  ? 'bg-blue-600 text-white shadow-md' 
+                  : 'text-slate-600 hover:bg-slate-100'
+              }`}
+            >
+              <span className="text-base flex-shrink-0">{item.icon}</span>
+              {sidebarOpen && <span className="truncate">{item.label}</span>}
+            </button>
           ))}
         </nav>
-        {sidebarOpen && (
-          <div className="p-3 border-t border-slate-200">
-            <div className="flex gap-2">
-              <span className="badge bg-red-100 text-red-700 text-[10px]">Angular 17</span>
-              <span className="badge bg-orange-100 text-orange-700 text-[10px]">Laravel 11</span>
-            </div>
-          </div>
-        )}
       </aside>
 
       {/* Main */}
@@ -68,23 +57,21 @@ export default function App() {
         <header className="bg-white border-b border-slate-200 px-6 py-3 flex items-center justify-between flex-shrink-0">
           <div className="flex items-center gap-3">
             <button onClick={() => setSidebarOpen(!sidebarOpen)} className="text-slate-400 hover:text-slate-600">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
             </button>
             <h2 className="text-base font-semibold text-slate-800">
               {menuItems.find(m => m.id === currentPage)?.icon} {menuItems.find(m => m.id === currentPage)?.label}
             </h2>
-          </div>
-          <div className="flex items-center gap-2 text-xs text-slate-500">
-            <span className="badge bg-slate-100 text-slate-600">v1.0.0</span>
-            <span>Documentação Técnica</span>
           </div>
         </header>
 
         <div className="flex-1 overflow-y-auto">
           <div className="max-w-6xl mx-auto p-6">
             {currentPage === 'overview' && <OverviewPage />}
-            {currentPage === 'angular' && <AngularPage activeFile={activeFile} setActiveFile={setActiveFile} />}
-            {currentPage === 'laravel' && <LaravelPage activeFile={activeFile} setActiveFile={setActiveFile} />}
+            {currentPage === 'angular' && <AngularPage />}
+            {currentPage === 'laravel' && <LaravelPage />}
             {currentPage === 'database' && <DatabasePage />}
             {currentPage === 'api' && <ApiPage />}
             {currentPage === 'govbr' && <GovBrPage />}
@@ -97,8 +84,7 @@ export default function App() {
   );
 }
 
-// ==================== CODE VIEWER COMPONENT ====================
-function CodeViewer({ code, filename, language }: { code: string; filename?: string; language?: string }) {
+function CodeViewer({ code, filename }: { code: string; filename?: string }) {
   const [copied, setCopied] = useState(false);
   
   const copy = () => {
@@ -110,38 +96,25 @@ function CodeViewer({ code, filename, language }: { code: string; filename?: str
   return (
     <div className="relative">
       {filename && (
-        <div className="flex items-center justify-between bg-slate-800 px-4 py-2 rounded-t-lg border-b border-slate-700">
+        <div className="flex items-center justify-between bg-slate-800 px-4 py-2 rounded-t-lg">
           <span className="text-xs text-slate-400 font-mono">{filename}</span>
-          {language && <span className="text-[10px] text-slate-500 uppercase">{language}</span>}
         </div>
       )}
       <button onClick={copy} className={`absolute top-2 right-2 px-2 py-1 text-xs rounded transition-colors ${copied ? 'bg-green-600 text-white' : 'bg-slate-700 hover:bg-slate-600 text-slate-300'}`}>
         {copied ? '✓ Copiado' : 'Copiar'}
       </button>
-      <pre className={`code-block ${filename ? 'rounded-t-none' : ''}`}>{code}</pre>
+      <pre className={`bg-slate-900 text-slate-100 p-4 rounded-lg overflow-x-auto text-xs leading-relaxed font-mono ${filename ? 'rounded-t-none' : ''}`}>
+        {code}
+      </pre>
     </div>
   );
 }
 
-function FileTreeItem({ name, icon, indent = 0, onClick, active }: { name: string; icon: string; indent?: number; onClick?: () => void; active?: boolean }) {
-  return (
-    <div 
-      className={`file-tree-item ${active ? 'bg-primary-50 text-primary-700' : ''}`}
-      style={{ paddingLeft: `${12 + indent * 16}px` }}
-      onClick={onClick}
-    >
-      <span className="text-sm">{icon}</span>
-      <span className="text-sm truncate">{name}</span>
-    </div>
-  );
-}
-
-// ==================== OVERVIEW PAGE ====================
 function OverviewPage() {
   return (
     <div className="space-y-6">
       <div className="text-center py-8">
-        <div className="w-20 h-20 bg-gradient-to-br from-primary-500 to-primary-700 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+        <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-blue-700 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
           <span className="text-white text-3xl">✝</span>
         </div>
         <h1 className="text-3xl font-bold text-slate-800">Gestão de Termos de Voluntariado Paroquial</h1>
@@ -149,22 +122,22 @@ function OverviewPage() {
           Plataforma completa para cadastro de voluntários, geração de termos, assinatura eletrônica via gov.br e gestão documental.
         </p>
         <div className="flex justify-center gap-3 mt-4">
-          <span className="badge bg-red-100 text-red-700 px-3 py-1">🅰️ Angular 17+</span>
-          <span className="badge bg-orange-100 text-orange-700 px-3 py-1">🔺 Laravel 11</span>
-          <span className="badge bg-blue-100 text-blue-700 px-3 py-1">🔐 JWT Auth</span>
-          <span className="badge bg-green-100 text-green-700 px-3 py-1">🗄️ SQL Server</span>
+          <span className="px-3 py-1 bg-red-100 text-red-700 rounded-full text-xs font-medium">🅰️ Angular 17+</span>
+          <span className="px-3 py-1 bg-orange-100 text-orange-700 rounded-full text-xs font-medium">🔺 Laravel 11</span>
+          <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">🔐 JWT Auth</span>
+          <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">🗄️ SQL Server</span>
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="card p-6">
+        <div className="bg-white rounded-xl border border-slate-200 p-6">
           <h3 className="font-semibold text-slate-800 mb-3">🎯 Objetivo</h3>
           <p className="text-sm text-slate-600">
             Permitir que a paróquia cadastre voluntários, vincule-os às pastorais e eventos, gere documentos PDF, 
-            controle o ciclo de assinatura eletrônica via gov.br e mantenha auditoria completa de todas as operações.
+            controle o ciclo de assinatura eletrônica via gov.br e mantenha auditoria completa.
           </p>
         </div>
-        <div className="card p-6">
+        <div className="bg-white rounded-xl border border-slate-200 p-6">
           <h3 className="font-semibold text-slate-800 mb-3">📋 Tipos de Termos</h3>
           <div className="space-y-2 text-sm text-slate-600">
             <p><strong>TVP</strong> - Termo de Voluntariado Pastoral (anual)</p>
@@ -173,404 +146,875 @@ function OverviewPage() {
         </div>
       </div>
 
-      <div className="card p-6">
+      <div className="bg-white rounded-xl border border-slate-200 p-6">
         <h3 className="font-semibold text-slate-800 mb-4">🏗️ Arquitetura do Sistema</h3>
-        <CodeViewer code={`
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                    FRONTEND - Angular 17+ (Standalone Components)            │
-├──────────────┬──────────────┬──────────────┬──────────────┬────────────────┤
-│   Auth       │  Dashboard   │  Voluntários │   Pastorais  │    Eventos     │
-│   Module     │   Module     │   Module     │   Module     │    Module      │
-├──────────────┴──────────────┴──────────────┴──────────────┴────────────────┤
-│              Termos │ Templates │ Validação │ Auditoria                      │
-├─────────────────────────────────────────────────────────────────────────────┤
-│  Core: Interceptors (JWT) │ Guards (Auth/Role) │ Services │ Models          │
-└───────────────────────────────────┬─────────────────────────────────────────┘
-                                    │ HTTP/REST + JWT Bearer Token
-┌───────────────────────────────────▼─────────────────────────────────────────┐
-│                    BACKEND - Laravel 11 (API)                                │
-├──────────────┬──────────────┬──────────────┬──────────────┬────────────────┤
-│  Auth        │  Voluntario  │   Pastoral   │    Evento    │     Termo      │
-│  Controller  │  Controller  │  Controller  │  Controller  │   Controller   │
-├──────────────┴──────────────┴──────────────┴──────────────┴────────────────┤
-│                          SERVICE LAYER (Business Logic)                      │
-├──────────────┬──────────────┬──────────────┬──────────────┬────────────────┤
-│ TermoService │ GovBrSign    │ PdfGenerator │  Storage     │  Notification  │
-│              │ Service      │ Service      │  Service     │  Service       │
-├──────────────┴──────────────┴──────────────┴──────────────┴────────────────┤
-│  AuditoriaService │ HashService │ DocumentStorageService                    │
-└────────┬────────────────┬────────────────┬────────────────┬────────────────┘
-         │                │                │                │
-    ┌────▼────┐    ┌──────▼──────┐   ┌────▼────┐    ┌──────▼──────┐
-    │ gov.br  │    │  S3/Azure/  │   │  SQL    │    │   Queue     │
-    │  API    │    │   Local     │   │ Server  │    │  (Jobs)     │
-    │(assin.) │    │  Storage    │   │(EF/DB)  │    │             │
-    └─────────┘    └─────────────┘   └─────────┘    └─────────────┘
-`} filename="arquitetura.txt" />
+        <CodeViewer code={`FRONTEND - Angular 17+ (Standalone Components)
+├── Core Module
+│   ├── Interceptors (JWT, Error Handling)
+│   ├── Guards (Auth, Role-based)
+│   └── Services (Auth, Notification)
+├── Features (Lazy Loaded)
+│   ├── Dashboard
+│   ├── Voluntários
+│   ├── Pastorais
+│   ├── Eventos
+│   ├── Termos
+│   ├── Templates
+│   ├── Auditoria
+│   └── Validação
+└── Shared (Components, Pipes, Validators)
+
+BACKEND - Laravel 11 (API REST + JWT)
+├── Controllers (RESTful)
+├── Services (Business Logic)
+│   ├── TermoService
+│   ├── GovBrSignatureService
+│   ├── PdfGeneratorService
+│   └── AuditoriaService
+├── Models (Eloquent ORM)
+├── Middleware (JWT Auth, Paroquia Context)
+└── Jobs (Queue for async tasks)
+
+DATABASE - SQL Server
+├── Dioceses → Paróquias → Comunidades
+├── Pastorais → Voluntários → Termos
+├── Eventos → Termos
+└── Auditoria Logs`} />
       </div>
 
-      <div className="card p-6">
-        <h3 className="font-semibold text-slate-800 mb-4">📊 Hierarquia Institucional</h3>
-        <CodeViewer code={`
-Diocese
-└── Paróquias (multi-tenant, isoladas por paroquia_id)
-    ├── Comunidades
-    ├── Pastorais
-    │   ├── Coordenador
-    │   └── Voluntários
-    │       └── Termos (TVP-YYYY-NNNNNN)
-    ├── Eventos
-    │   ├── Voluntários vinculados
-    │   └── Termos (TVE-YYYY-NNNNNN)
-    ├── Templates de Termos
-    └── Configurações
-`} />
-      </div>
-
-      <div className="card p-6">
+      <div className="bg-white rounded-xl border border-slate-200 p-6">
         <h3 className="font-semibold text-slate-800 mb-4">🔄 Ciclo de Vida do Termo</h3>
         <div className="flex flex-wrap items-center gap-2 text-xs">
           {['RASCUNHO', 'GERADO', 'AGUARDANDO_ASSINATURA', 'ASSINATURA_EM_ANDAMENTO', 'ASSINADO'].map((s, i) => (
             <span key={s} className="flex items-center gap-2">
               {i > 0 && <span className="text-slate-400">→</span>}
-              <span className="badge bg-primary-50 text-primary-700 px-2 py-1">{s.replace(/_/g, ' ')}</span>
+              <span className="px-2 py-1 bg-blue-50 text-blue-700 rounded">{s.replace(/_/g, ' ')}</span>
             </span>
           ))}
         </div>
         <p className="text-xs text-slate-500 mt-3">Status alternativos: RECUSADO | CANCELADO | EXPIRADO | ERRO_ASSINATURA</p>
       </div>
-
-      <div className="card p-6">
-        <h3 className="font-semibold text-slate-800 mb-4">👥 Perfis de Usuário (RBAC)</h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          {[
-            { perfil: 'ADMIN_DIOCESE', desc: 'Acesso total à diocese' },
-            { perfil: 'ADMIN_PAROQUIA', desc: 'Administra a paróquia' },
-            { perfil: 'COORDENADOR_PASTORAL', desc: 'Gerencia uma pastoral' },
-            { perfil: 'RESPONSAVEL_EVENTO', desc: 'Gerencia eventos' },
-            { perfil: 'SECRETARIA', desc: 'Operações administrativas' },
-            { perfil: 'VOLUNTARIO', desc: 'Acesso aos próprios termos' },
-            { perfil: 'AUDITOR', desc: 'Consulta logs de auditoria' },
-          ].map(p => (
-            <div key={p.perfil} className="bg-slate-50 rounded-lg p-3">
-              <p className="text-xs font-bold text-slate-700">{p.perfil}</p>
-              <p className="text-[10px] text-slate-500 mt-1">{p.desc}</p>
-            </div>
-          ))}
-        </div>
-      </div>
     </div>
   );
 }
 
-// ==================== ANGULAR PAGE ====================
-function AngularPage({ activeFile, setActiveFile }: { activeFile: string; setActiveFile: (f: string) => void }) {
-  const [tab, setTab] = useState('structure');
+function AngularPage() {
+  const [activeFile, setActiveFile] = useState('app.config.ts');
   
-  const files: Record<string, { code: string; lang: string }> = {
-    'app.config.ts': { code: angularStructure.appConfig, lang: 'typescript' },
-    'app.routes.ts': { code: angularStructure.appRoutes, lang: 'typescript' },
-    'auth.interceptor.ts': { code: angularCore.authInterceptor, lang: 'typescript' },
-    'error.interceptor.ts': { code: angularCore.errorInterceptor, lang: 'typescript' },
-    'auth.guard.ts': { code: angularCore.authGuard, lang: 'typescript' },
-    'role.guard.ts': { code: angularCore.roleGuard, lang: 'typescript' },
-    'auth.service.ts': { code: angularCore.authService, lang: 'typescript' },
-    'notification.service.ts': { code: angularCore.notificationService, lang: 'typescript' },
-    'models': { code: angularCore.models, lang: 'typescript' },
-    'dashboard.component.ts': { code: angularFeatures.dashboardComponent, lang: 'typescript' },
-    'termos.service.ts': { code: angularFeatures.termosComponent.split('// src/app/features/termos/termo-assinatura')[0], lang: 'typescript' },
-    'termo-assinatura.component.ts': { code: '// src/app/features/termos/termo-assinatura/termo-assinatura.component.ts\n' + angularFeatures.termosComponent.split('// src/app/features/termos/termo-assinatura/')[1]?.split('// src/app/features/voluntarios')[0] || '', lang: 'typescript' },
-    'voluntarios.service.ts': { code: angularFeatures.voluntariosComponent.split('// src/app/features/voluntarios/voluntario-form')[0], lang: 'typescript' },
-    'voluntario-form.component.ts': { code: '// src/app/features/voluntarios/voluntario-form/voluntario-form.component.ts\n' + (angularFeatures.voluntariosComponent.split('// src/app/features/voluntarios/voluntario-form/voluntario-form.component.ts')[1] || ''), lang: 'typescript' },
-    'validacao.component.ts': { code: angularFeatures.validacaoComponent, lang: 'typescript' },
-    'cpf.validator.ts': { code: angularShared.cpfValidator, lang: 'typescript' },
-    'status-badge.pipe.ts': { code: angularShared.statusBadgePipe, lang: 'typescript' },
-    'environment.ts': { code: angularEnvironment, lang: 'typescript' },
+  const files: Record<string, string> = {
+    'app.config.ts': `import { ApplicationConfig } from '@angular/core';
+import { provideRouter } from '@angular/router';
+import { provideHttpClient, withInterceptors } from '@angular/common/http';
+import { routes } from './app.routes';
+import { authInterceptor } from './core/interceptors/auth.interceptor';
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideRouter(routes),
+    provideHttpClient(withInterceptors([authInterceptor])),
+  ]
+};`,
+
+    'app.routes.ts': `import { Routes } from '@angular/router';
+import { authGuard } from './core/guards/auth.guard';
+
+export const routes: Routes = [
+  { path: 'auth', loadComponent: () => import('./features/auth/login.component') },
+  {
+    path: '',
+    canActivate: [authGuard],
+    children: [
+      { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
+      { path: 'dashboard', loadComponent: () => import('./features/dashboard/dashboard.component') },
+      { path: 'voluntarios', loadChildren: () => import('./features/voluntarios/voluntarios.routes') },
+      { path: 'pastorais', loadChildren: () => import('./features/pastorais/pastorais.routes') },
+      { path: 'eventos', loadChildren: () => import('./features/eventos/eventos.routes') },
+      { path: 'termos', loadChildren: () => import('./features/termos/termos.routes') },
+      { path: 'validar-termo/:codigo', loadComponent: () => import('./features/validacao/validacao.component') }
+    ]
+  }
+];`,
+
+    'auth.service.ts': `import { Injectable, signal } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable, tap } from 'rxjs';
+import { environment } from '../../../environments/environment';
+
+@Injectable({ providedIn: 'root' })
+export class AuthService {
+  private readonly apiUrl = \`\${environment.apiUrl}/auth\`;
+  private currentUserSignal = signal<any>(null);
+  currentUser = this.currentUserSignal.asReadonly();
+
+  constructor(private http: HttpClient) {
+    this.loadStoredUser();
+  }
+
+  private loadStoredUser(): void {
+    const user = localStorage.getItem('user');
+    if (user) this.currentUserSignal.set(JSON.parse(user));
+  }
+
+  login(email: string, password: string): Observable<any> {
+    return this.http.post<any>(\`\${this.apiUrl}/login\`, { email, password }).pipe(
+      tap(response => {
+        localStorage.setItem('token', response.token);
+        localStorage.setItem('user', JSON.stringify(response.user));
+        this.currentUserSignal.set(response.user);
+      })
+    );
+  }
+
+  logout(): void {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    this.currentUserSignal.set(null);
+  }
+
+  getToken(): string | null {
+    return localStorage.getItem('token');
+  }
+
+  isAuthenticated(): boolean {
+    return !!this.getToken();
+  }
+}`,
+
+    'termos.service.ts': `import { Injectable } from '@angular/core';
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { environment } from '../../../environments/environment';
+
+@Injectable({ providedIn: 'root' })
+export class TermosService {
+  private readonly apiUrl = \`\${environment.apiUrl}/termos\`;
+
+  constructor(private http: HttpClient) {}
+
+  getAll(filters?: any): Observable<any> {
+    let params = new HttpParams();
+    if (filters?.status) params = params.set('status', filters.status);
+    if (filters?.tipo) params = params.set('tipo', filters.tipo);
+    return this.http.get<any>(this.apiUrl, { params });
+  }
+
+  getById(id: number): Observable<any> {
+    return this.http.get<any>(\`\${this.apiUrl}/\${id}\`);
+  }
+
+  gerarPdf(id: number): Observable<Blob> {
+    return this.http.post(\`\${this.apiUrl}/\${id}/gerar\`, {}, { responseType: 'blob' });
+  }
+
+  solicitarAssinatura(id: number): Observable<{ redirect_url: string }> {
+    return this.http.post<{ redirect_url: string }>(\`\${this.apiUrl}/\${id}/solicitar-assinatura\`, {});
+  }
+
+  getStatusAssinatura(id: number): Observable<{ status: string }> {
+    return this.http.get<{ status: string }>(\`\${this.apiUrl}/\${id}/assinatura/status\`);
+  }
+
+  renovar(id: number): Observable<any> {
+    return this.http.post<any>(\`\${this.apiUrl}/\${id}/renovar\`, {});
+  }
+}`,
+
+    'dashboard.component.ts': `import { Component, OnInit, signal } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { DashboardService } from './dashboard.service';
+
+@Component({
+  selector: 'app-dashboard',
+  standalone: true,
+  imports: [CommonModule],
+  templateUrl: './dashboard.component.html'
+})
+export class DashboardComponent implements OnInit {
+  stats = signal<any>(null);
+  loading = signal(true);
+
+  constructor(private dashboardService: DashboardService) {}
+
+  ngOnInit(): void {
+    this.dashboardService.getStats().subscribe({
+      next: (stats) => {
+        this.stats.set(stats);
+        this.loading.set(false);
+      },
+      error: () => this.loading.set(false)
+    });
+  }
+}`,
+
+    'validacao.component.ts': `import { Component, OnInit, signal } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { ActivatedRoute } from '@angular/router';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../../../environments/environment';
+
+@Component({
+  selector: 'app-validacao',
+  standalone: true,
+  imports: [CommonModule],
+  template: \`
+    <div class="p-8">
+      <h1 class="text-2xl font-bold mb-4">Validação de Termo</h1>
+      
+      @if (loading()) {
+        <p>Verificando...</p>
+      } @else if (termo()) {
+        <div class="p-6 bg-white rounded-lg border">
+          <h2 class="text-xl font-semibold">
+            {{ termo()!.status === 'ASSINADO' ? '✓ Documento Válido' : '✗ Documento Inválido' }}
+          </h2>
+          <p class="mt-2">Código: {{ termo()!.codigo }}</p>
+          <p>Status: {{ termo()!.status }}</p>
+        </div>
+      } @else {
+        <p>Documento não encontrado</p>
+      }
+    </div>
+  \`
+})
+export class ValidacaoComponent implements OnInit {
+  codigo = signal('');
+  termo = signal<any>(null);
+  loading = signal(true);
+
+  constructor(private route: ActivatedRoute, private http: HttpClient) {}
+
+  ngOnInit(): void {
+    this.codigo.set(this.route.snapshot.paramMap.get('codigo') || '');
+    if (this.codigo()) this.validar();
+  }
+
+  private validar(): void {
+    this.http.get(\`\${environment.apiUrl}/validacao/\${this.codigo()}\`).subscribe({
+      next: (termo) => {
+        this.termo.set(termo);
+        this.loading.set(false);
+      },
+      error: () => {
+        this.termo.set(null);
+        this.loading.set(false);
+      }
+    });
+  }
+}`,
+
+    'environment.ts': `export const environment = {
+  production: false,
+  apiUrl: 'http://localhost:8000/api/v1',
+  govBrAuthUrl: 'https://sso.staging.acesso.gov.br',
+  govBrClientId: 'SEU_CLIENT_ID',
+  govBrRedirectUri: 'http://localhost:4200/auth/callback',
+};`
   };
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-4 border-b border-slate-200">
-        {[
-          { id: 'structure', label: '📁 Estrutura' },
-          { id: 'code', label: '💻 Código' },
-        ].map(t => (
-          <button key={t.id} className={`tab-btn ${tab === t.id ? 'active' : ''}`} onClick={() => setTab(t.id)}>
-            {t.label}
-          </button>
-        ))}
+      <div className="bg-white rounded-xl border border-slate-200 p-6">
+        <h3 className="font-semibold text-slate-800 mb-4">📁 Estrutura do Projeto Angular</h3>
+        <CodeViewer code={`src/
+├── app/
+│   ├── app.config.ts
+│   ├── app.routes.ts
+│   ├── core/
+│   │   ├── interceptors/
+│   │   │   ├── auth.interceptor.ts
+│   │   │   └── error.interceptor.ts
+│   │   ├── guards/
+│   │   │   ├── auth.guard.ts
+│   │   │   └── role.guard.ts
+│   │   └── services/
+│   │       ├── auth.service.ts
+│   │       └── notification.service.ts
+│   ├── features/
+│   │   ├── auth/
+│   │   │   └── login.component.ts
+│   │   ├── dashboard/
+│   │   │   ├── dashboard.component.ts
+│   │   │   ├── dashboard.service.ts
+│   │   │   └── dashboard.model.ts
+│   │   ├── voluntarios/
+│   │   │   ├── voluntarios.routes.ts
+│   │   │   ├── voluntarios-list/
+│   │   │   └── voluntario-form/
+│   │   ├── pastorais/
+│   │   ├── eventos/
+│   │   ├── termos/
+│   │   │   ├── termos.routes.ts
+│   │   │   ├── termos.service.ts
+│   │   │   ├── termos-list/
+│   │   │   ├── termo-detail/
+│   │   │   └── termo-assinatura/
+│   │   ├── templates/
+│   │   ├── auditoria/
+│   │   └── validacao/
+│   │       └── validacao.component.ts
+│   └── shared/
+│       ├── pipes/
+│       └── validators/
+└── environments/
+    ├── environment.ts
+    └── environment.prod.ts`} />
       </div>
 
-      {tab === 'structure' && (
-        <div className="card p-6">
-          <h3 className="font-semibold text-slate-800 mb-4">Estrutura do Projeto Angular</h3>
-          <CodeViewer code={angularStructure.root} filename="angular-project-structure" />
-          
-          <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="bg-slate-50 rounded-lg p-4">
-              <h4 className="text-sm font-semibold text-slate-700 mb-2">📦 Módulos Lazy-Loaded</h4>
-              <ul className="text-xs text-slate-600 space-y-1">
-                <li>• features/auth/ - Autenticação</li>
-                <li>• features/dashboard/ - Dashboard</li>
-                <li>• features/voluntarios/ - CRUD Voluntários</li>
-                <li>• features/pastorais/ - CRUD Pastorais</li>
-                <li>• features/eventos/ - CRUD Eventos</li>
-                <li>• features/termos/ - Gestão de Termos</li>
-                <li>• features/templates/ - Templates</li>
-                <li>• features/auditoria/ - Logs de Auditoria</li>
-                <li>• features/validacao/ - Validação Pública</li>
-              </ul>
-            </div>
-            <div className="bg-slate-50 rounded-lg p-4">
-              <h4 className="text-sm font-semibold text-slate-700 mb-2">🔧 Core Module</h4>
-              <ul className="text-xs text-slate-600 space-y-1">
-                <li>• interceptors/ - JWT, Error handling</li>
-                <li>• guards/ - Auth, Role-based access</li>
-                <li>• services/ - Auth, Notification, API</li>
-                <li>• models/ - Interfaces TypeScript</li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {tab === 'code' && (
+      <div className="bg-white rounded-xl border border-slate-200 p-6">
+        <h3 className="font-semibold text-slate-800 mb-4">💻 Código-Fonte</h3>
         <div className="flex gap-4">
           <div className="w-64 flex-shrink-0">
-            <div className="card p-3 sticky top-0">
-              <h4 className="text-xs font-semibold text-slate-500 uppercase mb-2">Arquivos</h4>
-              <div className="space-y-0.5 max-h-[70vh] overflow-y-auto">
-                <FileTreeItem name="app/" icon="📁" active={false} />
-                <FileTreeItem name="app.config.ts" icon="📄" indent={1} onClick={() => setActiveFile('app.config.ts')} active={activeFile === 'app.config.ts'} />
-                <FileTreeItem name="app.routes.ts" icon="📄" indent={1} onClick={() => setActiveFile('app.routes.ts')} active={activeFile === 'app.routes.ts'} />
-                <FileTreeItem name="core/" icon="📁" indent={1} />
-                <FileTreeItem name="interceptors/" icon="📁" indent={2} />
-                <FileTreeItem name="auth.interceptor.ts" icon="📄" indent={3} onClick={() => setActiveFile('auth.interceptor.ts')} active={activeFile === 'auth.interceptor.ts'} />
-                <FileTreeItem name="error.interceptor.ts" icon="📄" indent={3} onClick={() => setActiveFile('error.interceptor.ts')} active={activeFile === 'error.interceptor.ts'} />
-                <FileTreeItem name="guards/" icon="📁" indent={2} />
-                <FileTreeItem name="auth.guard.ts" icon="📄" indent={3} onClick={() => setActiveFile('auth.guard.ts')} active={activeFile === 'auth.guard.ts'} />
-                <FileTreeItem name="role.guard.ts" icon="📄" indent={3} onClick={() => setActiveFile('role.guard.ts')} active={activeFile === 'role.guard.ts'} />
-                <FileTreeItem name="services/" icon="📁" indent={2} />
-                <FileTreeItem name="auth.service.ts" icon="📄" indent={3} onClick={() => setActiveFile('auth.service.ts')} active={activeFile === 'auth.service.ts'} />
-                <FileTreeItem name="notification.service.ts" icon="📄" indent={3} onClick={() => setActiveFile('notification.service.ts')} active={activeFile === 'notification.service.ts'} />
-                <FileTreeItem name="models/" icon="📁" indent={2} />
-                <FileTreeItem name="termo.model.ts" icon="📄" indent={3} onClick={() => setActiveFile('models')} active={activeFile === 'models'} />
-                <FileTreeItem name="features/" icon="📁" indent={1} />
-                <FileTreeItem name="dashboard/" icon="📁" indent={2} />
-                <FileTreeItem name="dashboard.component.ts" icon="📄" indent={3} onClick={() => setActiveFile('dashboard.component.ts')} active={activeFile === 'dashboard.component.ts'} />
-                <FileTreeItem name="termos/" icon="📁" indent={2} />
-                <FileTreeItem name="termos.service.ts" icon="📄" indent={3} onClick={() => setActiveFile('termos.service.ts')} active={activeFile === 'termos.service.ts'} />
-                <FileTreeItem name="termo-assinatura.component.ts" icon="📄" indent={3} onClick={() => setActiveFile('termo-assinatura.component.ts')} active={activeFile === 'termo-assinatura.component.ts'} />
-                <FileTreeItem name="voluntarios/" icon="📁" indent={2} />
-                <FileTreeItem name="voluntarios.service.ts" icon="📄" indent={3} onClick={() => setActiveFile('voluntarios.service.ts')} active={activeFile === 'voluntarios.service.ts'} />
-                <FileTreeItem name="voluntario-form.component.ts" icon="📄" indent={3} onClick={() => setActiveFile('voluntario-form.component.ts')} active={activeFile === 'voluntario-form.component.ts'} />
-                <FileTreeItem name="validacao/" icon="📁" indent={2} />
-                <FileTreeItem name="validacao.component.ts" icon="📄" indent={3} onClick={() => setActiveFile('validacao.component.ts')} active={activeFile === 'validacao.component.ts'} />
-                <FileTreeItem name="shared/" icon="📁" indent={1} />
-                <FileTreeItem name="cpf.validator.ts" icon="📄" indent={2} onClick={() => setActiveFile('cpf.validator.ts')} active={activeFile === 'cpf.validator.ts'} />
-                <FileTreeItem name="status-badge.pipe.ts" icon="📄" indent={2} onClick={() => setActiveFile('status-badge.pipe.ts')} active={activeFile === 'status-badge.pipe.ts'} />
-                <FileTreeItem name="environments/" icon="📁" indent={1} />
-                <FileTreeItem name="environment.ts" icon="📄" indent={2} onClick={() => setActiveFile('environment.ts')} active={activeFile === 'environment.ts'} />
-              </div>
+            <div className="space-y-1">
+              {Object.keys(files).map(file => (
+                <button
+                  key={file}
+                  onClick={() => setActiveFile(file)}
+                  className={`w-full text-left px-3 py-2 rounded text-sm ${
+                    activeFile === file ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-50'
+                  }`}
+                >
+                  📄 {file}
+                </button>
+              ))}
             </div>
           </div>
-          <div className="flex-1 min-w-0">
-            {activeFile && files[activeFile] ? (
-              <CodeViewer code={files[activeFile].code} filename={activeFile} language={files[activeFile].lang} />
-            ) : (
-              <div className="card p-12 text-center">
-                <p className="text-slate-400">← Selecione um arquivo para visualizar o código</p>
-              </div>
-            )}
+          <div className="flex-1">
+            <CodeViewer code={files[activeFile]} filename={activeFile} />
           </div>
         </div>
-      )}
+      </div>
     </div>
   );
 }
 
-// ==================== LARAVEL PAGE ====================
-function LaravelPage({ activeFile, setActiveFile }: { activeFile: string; setActiveFile: (f: string) => void }) {
-  const [tab, setTab] = useState('structure');
+function LaravelPage() {
+  const [activeFile, setActiveFile] = useState('routes/api.php');
   
-  const files: Record<string, { code: string; lang: string }> = {
-    'routes/api.php': { code: laravelRoutes, lang: 'php' },
-    'Models/Termo.php': { code: laravelModels.termo, lang: 'php' },
-    'Models/Voluntario.php': { code: laravelModels.voluntario, lang: 'php' },
-    'Models/User.php': { code: laravelModels.user, lang: 'php' },
-    'TermoController.php': { code: laravelControllers.termoController, lang: 'php' },
-    'AuthController.php': { code: laravelControllers.authController, lang: 'php' },
-    'DashboardController.php': { code: laravelControllers.dashboardController, lang: 'php' },
-    'GovBrSignatureService.php': { code: laravelServices.govBrSignatureService, lang: 'php' },
-    'TermoService.php': { code: laravelServices.termoService, lang: 'php' },
-    'PdfGeneratorService.php': { code: laravelServices.pdfGeneratorService, lang: 'php' },
-    'AuditoriaService.php': { code: laravelServices.auditoriaService, lang: 'php' },
-    'HashService.php': { code: laravelServices.hashService, lang: 'php' },
-    'DocumentStorageService.php': { code: laravelServices.documentStorageService, lang: 'php' },
-    'migrations': { code: laravelMigrations, lang: 'php' },
-    'config/jwt.php': { code: laravelConfig.jwt, lang: 'php' },
-    'config/govbr.php': { code: laravelConfig.govbr, lang: 'php' },
-    '.env.example': { code: laravelConfig.env, lang: 'env' },
+  const files: Record<string, string> = {
+    'routes/api.php': `<?php
+use Illuminate\\Support\\Facades\\Route;
+use App\\Http\\Controllers\\Api\\{AuthController, VoluntarioController, PastoralController, EventoController, TermoController, DashboardController, ValidacaoController};
+
+Route::prefix('v1')->group(function () {
+    // Público
+    Route::post('/auth/login', [AuthController::class, 'login']);
+    Route::get('/validacao/{codigo}', [ValidacaoController::class, 'validar']);
+    
+    // Autenticado (JWT)
+    Route::middleware('jwt.auth')->group(function () {
+        Route::post('/auth/logout', [AuthController::class, 'logout']);
+        Route::get('/auth/me', [AuthController::class, 'me']);
+        
+        Route::get('/dashboard', [DashboardController::class, 'stats']);
+        
+        Route::apiResource('/voluntarios', VoluntarioController::class);
+        Route::apiResource('/pastorais', PastoralController::class);
+        Route::apiResource('/eventos', EventoController::class);
+        
+        Route::get('/termos', [TermoController::class, 'index']);
+        Route::post('/termos/anual', [TermoController::class, 'storeAnual']);
+        Route::post('/termos/evento', [TermoController::class, 'storeEvento']);
+        Route::get('/termos/{id}', [TermoController::class, 'show']);
+        Route::post('/termos/{id}/gerar', [TermoController::class, 'gerarPdf']);
+        Route::post('/termos/{id}/solicitar-assinatura', [TermoController::class, 'solicitarAssinatura']);
+        Route::get('/termos/{id}/assinatura/status', [TermoController::class, 'statusAssinatura']);
+        Route::post('/termos/{id}/cancelar', [TermoController::class, 'cancelar']);
+        Route::post('/termos/{id}/renovar', [TermoController::class, 'renovar']);
+        Route::get('/termos/{id}/pdf', [TermoController::class, 'downloadPdf']);
+    });
+});`,
+
+    'Models/Termo.php': `<?php
+namespace App\\Models;
+
+use Illuminate\\Database\\Eloquent\\Model;
+use Illuminate\\Database\\Eloquent\\SoftDeletes;
+
+class Termo extends Model
+{
+    use SoftDeletes;
+
+    protected $fillable = [
+        'codigo', 'tipo', 'voluntario_id', 'pastoral_id', 'evento_id',
+        'paroquia_id', 'data_inicio', 'data_fim', 'status', 'template_id',
+        'versao', 'hash_documento', 'hash_documento_assinado',
+        'data_geracao', 'data_assinatura', 'assinatura_govbr_id',
+        'documento_url', 'documento_assinado_url'
+    ];
+
+    protected $casts = [
+        'data_inicio' => 'date',
+        'data_fim' => 'date',
+        'data_geracao' => 'date',
+        'data_assinatura' => 'datetime',
+    ];
+
+    public function voluntario() { return $this->belongsTo(Voluntario::class); }
+    public function pastoral() { return $this->belongsTo(Pastoral::class); }
+    public function evento() { return $this->belongsTo(Evento::class); }
+    public function paroquia() { return $this->belongsTo(Paroquia::class); }
+    public function template() { return $this->belongsTo(TermoTemplate::class, 'template_id'); }
+
+    public static function gerarCodigo(string $tipo, int $paroquiaId): string
+    {
+        $prefixo = $tipo === 'ANUAL' ? 'TVP' : 'TVE';
+        $ano = date('Y');
+        $ultimo = self::where('paroquia_id', $paroquiaId)
+            ->where('codigo', 'like', "{$prefixo}-{$ano}-%")
+            ->orderBy('codigo', 'desc')
+            ->first();
+        
+        $seq = $ultimo ? intval(substr($ultimo->codigo, -6)) + 1 : 1;
+        return sprintf('%s-%s-%06d', $prefixo, $ano, $seq);
+    }
+}`,
+
+    'Controllers/TermoController.php': `<?php
+namespace App\\Http\\Controllers\\Api;
+
+use App\\Http\\Controllers\\Controller;
+use App\\Models\\Termo;
+use App\\Services\\{TermoService, GovBrSignatureService, AuditoriaService};
+use Illuminate\\Http\\Request;
+use Illuminate\\Support\\Facades\\Auth;
+
+class TermoController extends Controller
+{
+    public function __construct(
+        private TermoService $termoService,
+        private GovBrSignatureService $signatureService,
+        private AuditoriaService $auditoriaService
+    ) {}
+
+    public function index(Request $request)
+    {
+        $query = Termo::with(['voluntario', 'pastoral', 'evento'])
+            ->where('paroquia_id', $request->attributes->get('paroquia_id'));
+
+        if ($request->filled('status')) $query->where('status', $request->status);
+        if ($request->filled('tipo')) $query->where('tipo', $request->tipo);
+
+        return response()->json(['data' => $query->paginate(15)]);
+    }
+
+    public function storeAnual(Request $request)
+    {
+        $validated = $request->validate([
+            'voluntario_id' => 'required|exists:voluntarios,id',
+            'pastoral_id' => 'required|exists:pastorais,id',
+            'template_id' => 'required|exists:termo_templates,id',
+            'data_inicio' => 'required|date',
+            'data_fim' => 'required|date|after:data_inicio',
+        ]);
+
+        $termo = $this->termoService->criarTermoAnual($validated, $request->attributes->get('paroquia_id'));
+        
+        $this->auditoriaService->registrar('TERMO_CRIADO', Auth::user()->nome, $termo->id);
+
+        return response()->json($termo, 201);
+    }
+
+    public function solicitarAssinatura(int $id)
+    {
+        $termo = Termo::findOrFail($id);
+        
+        if ($termo->status !== 'GERADO') {
+            return response()->json(['message' => 'Status inválido'], 422);
+        }
+
+        $signatureRequest = $this->signatureService->criarSolicitacaoAssinatura($termo);
+
+        $termo->update([
+            'status' => 'AGUARDANDO_ASSINATURA',
+            'data_solicitacao_assinatura' => now(),
+            'assinatura_govbr_id' => $signatureRequest['signature_id'],
+        ]);
+
+        return response()->json(['redirect_url' => $signatureRequest['auth_url']]);
+    }
+
+    public function renovar(int $id)
+    {
+        $termo = Termo::findOrFail($id);
+        $novoTermo = $this->termoService->renovarTermo($termo);
+        
+        return response()->json($novoTermo, 201);
+    }
+}`,
+
+    'Services/GovBrSignatureService.php': `<?php
+namespace App\\Services;
+
+use Illuminate\\Support\\Facades\\Http;
+use Illuminate\\Support\\Str;
+
+/**
+ * Integração com API de Assinatura Eletrônica gov.br
+ * Documentação: https://manual-integracao-assinatura-eletronica.servicos.gov.br/
+ */
+class GovBrSignatureService
+{
+    private string $authUrl;
+    private string $apiUrl;
+    private string $clientId;
+    private string $redirectUri;
+
+    public function __construct()
+    {
+        $this->authUrl = config('govbr.auth_url');
+        $this->apiUrl = config('govbr.api_url');
+        $this->clientId = config('govbr.client_id');
+        $this->redirectUri = config('govbr.redirect_uri');
+    }
+
+    public function criarSolicitacaoAssinatura($termo): array
+    {
+        $state = Str::uuid()->toString();
+        
+        cache()->put("signature:{$state}", [
+            'termo_id' => $termo->id,
+            'hash' => $termo->hash_documento,
+        ], now()->addMinutes(30));
+
+        $authUrl = $this->authUrl . '/oauth2.0/authorize?' . http_build_query([
+            'response_type' => 'code',
+            'client_id' => $this->clientId,
+            'redirect_uri' => $this->redirectUri,
+            'scope' => 'sign',
+            'state' => $state,
+        ]);
+
+        return [
+            'auth_url' => $authUrl,
+            'signature_id' => $state,
+        ];
+    }
+
+    public function trocarCodePorToken(string $code): array
+    {
+        $response = Http::asForm()->post($this->authUrl . '/oauth2.0/token', [
+            'grant_type' => 'authorization_code',
+            'code' => $code,
+            'redirect_uri' => $this->redirectUri,
+            'client_id' => $this->clientId,
+            'client_secret' => config('govbr.client_secret'),
+        ]);
+
+        return $response->json();
+    }
+
+    public function obterAssinaturaPKCS7(string $accessToken, string $hash): string
+    {
+        $response = Http::withToken($accessToken)
+            ->post($this->apiUrl . '/externo/v2/assinarPKCS7', [
+                'digestAlgorithm' => 'SHA-256',
+                'hash' => $hash,
+            ]);
+
+        return $response->json()['signedHash'];
+    }
+}`,
+
+    'Services/TermoService.php': `<?php
+namespace App\\Services;
+
+use App\\Models\\Termo;
+use Illuminate\\Support\\Facades\\DB;
+
+class TermoService
+{
+    public function __construct(
+        private PdfGeneratorService $pdfService,
+        private HashService $hashService,
+        private DocumentStorageService $storageService
+    ) {}
+
+    public function criarTermoAnual(array $data, int $paroquiaId): Termo
+    {
+        return DB::transaction(function () use ($data, $paroquiaId) {
+            return Termo::create([
+                'codigo' => Termo::gerarCodigo('ANUAL', $paroquiaId),
+                'tipo' => 'ANUAL',
+                'voluntario_id' => $data['voluntario_id'],
+                'pastoral_id' => $data['pastoral_id'],
+                'paroquia_id' => $paroquiaId,
+                'data_inicio' => $data['data_inicio'],
+                'data_fim' => $data['data_fim'],
+                'status' => 'RASCUNHO',
+                'template_id' => $data['template_id'],
+                'versao' => 1,
+            ]);
+        });
+    }
+
+    public function gerarDocumento(Termo $termo): Termo
+    {
+        return DB::transaction(function () use ($termo) {
+            $pdfContent = $this->pdfService->gerarPdf($termo);
+            $hash = $this->hashService->calcularHash($pdfContent);
+            $url = $this->storageService->upload($pdfContent, "termos/{$termo->codigo}.pdf");
+
+            $termo->update([
+                'status' => 'GERADO',
+                'hash_documento' => $hash,
+                'data_geracao' => now(),
+                'documento_url' => $url,
+            ]);
+
+            return $termo->fresh();
+        });
+    }
+
+    public function renovarTermo(Termo $termoAntigo): Termo
+    {
+        return DB::transaction(function () use ($termoAntigo) {
+            $termoAntigo->update(['status' => 'EXPIRADO']);
+
+            return $this->criarTermoAnual([
+                'voluntario_id' => $termoAntigo->voluntario_id,
+                'pastoral_id' => $termoAntigo->pastoral_id,
+                'template_id' => $termoAntigo->template_id,
+                'data_inicio' => now()->format('Y-m-d'),
+                'data_fim' => now()->addYear()->format('Y-m-d'),
+            ], $termoAntigo->paroquia_id);
+        });
+    }
+}`,
+
+    'migrations/create_tables.php': `<?php
+use Illuminate\\Database\\Migrations\\Migration;
+use Illuminate\\Database\\Schema\\Blueprint;
+use Illuminate\\Support\\Facades\\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::create('dioceses', function (Blueprint $table) {
+            $table->id();
+            $table->string('nome');
+            $table->string('cidade');
+            $table->string('estado', 2);
+            $table->timestamps();
+        });
+
+        Schema::create('paroquias', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('diocese_id')->constrained();
+            $table->string('nome');
+            $table->string('endereco')->nullable();
+            $table->string('padroeiro')->nullable();
+            $table->timestamps();
+            $table->softDeletes();
+        });
+
+        Schema::create('voluntarios', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('paroquia_id')->constrained();
+            $table->foreignId('pastoral_id')->nullable()->constrained();
+            $table->string('nome_completo');
+            $table->string('cpf', 11)->unique();
+            $table->date('data_nascimento');
+            $table->string('email');
+            $table->string('telefone');
+            $table->date('data_inicio');
+            $table->enum('status', ['ATIVO', 'INATIVO', 'PENDENTE']);
+            $table->timestamps();
+            $table->softDeletes();
+        });
+
+        Schema::create('termos', function (Blueprint $table) {
+            $table->id();
+            $table->string('codigo')->unique();
+            $table->enum('tipo', ['ANUAL', 'EVENTO']);
+            $table->foreignId('voluntario_id')->constrained();
+            $table->foreignId('pastoral_id')->nullable()->constrained();
+            $table->foreignId('evento_id')->nullable()->constrained();
+            $table->foreignId('paroquia_id')->constrained();
+            $table->date('data_inicio');
+            $table->date('data_fim');
+            $table->enum('status', ['RASCUNHO', 'GERADO', 'AGUARDANDO_ASSINATURA', 'ASSINADO', 'RECUSADO', 'EXPIRADO']);
+            $table->foreignId('template_id')->constrained('termo_templates');
+            $table->integer('versao')->default(1);
+            $table->string('hash_documento', 64)->nullable();
+            $table->string('hash_documento_assinado', 64)->nullable();
+            $table->date('data_geracao')->nullable();
+            $table->timestamp('data_assinatura')->nullable();
+            $table->string('assinatura_govbr_id')->nullable();
+            $table->string('documento_url')->nullable();
+            $table->string('documento_assinado_url')->nullable();
+            $table->timestamps();
+            $table->softDeletes();
+            
+            $table->index('paroquia_id');
+            $table->index('status');
+        });
+
+        Schema::create('auditoria_logs', function (Blueprint $table) {
+            $table->id();
+            $table->string('usuario');
+            $table->timestamp('data_hora');
+            $table->string('ip')->nullable();
+            $table->string('acao');
+            $table->unsignedBigInteger('documento_id')->nullable();
+            $table->string('status_anterior')->nullable();
+            $table->string('status_novo')->nullable();
+            $table->enum('resultado', ['SUCESSO', 'ERRO']);
+            $table->text('mensagem')->nullable();
+            $table->timestamps();
+        });
+    }
+};`,
+
+    'config/govbr.php': `<?php
+return [
+    'environment' => env('GOVBR_ENVIRONMENT', 'staging'),
+    
+    'auth_url' => env('GOVBR_ENVIRONMENT') === 'production'
+        ? 'https://sso.acesso.gov.br'
+        : 'https://sso.staging.acesso.gov.br',
+    
+    'api_url' => env('GOVBR_ENVIRONMENT') === 'production'
+        ? 'https://assinatura-api.iti.br'
+        : 'https://cas.staging.iti.br',
+    
+    'client_id' => env('GOVBR_CLIENT_ID'),
+    'client_secret' => env('GOVBR_CLIENT_SECRET'),
+    'redirect_uri' => env('GOVBR_REDIRECT_URI'),
+    'scope' => env('GOVBR_SCOPE', 'sign'),
+];`,
+
+    '.env.example': `APP_NAME="Voluntariado Paroquial"
+APP_ENV=local
+APP_KEY=
+APP_URL=http://localhost:8000
+
+DB_CONNECTION=sqlsrv
+DB_HOST=localhost
+DB_PORT=1433
+DB_DATABASE=voluntariado_paroquial
+DB_USERNAME=sa
+DB_PASSWORD=
+
+JWT_SECRET=your-jwt-secret
+JWT_TTL=60
+
+GOVBR_ENVIRONMENT=staging
+GOVBR_CLIENT_ID=your-client-id
+GOVBR_CLIENT_SECRET=your-client-secret
+GOVBR_REDIRECT_URI=http://localhost:8000/api/v1/termos/assinatura/callback`
   };
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-4 border-b border-slate-200">
-        {[
-          { id: 'structure', label: '📁 Estrutura' },
-          { id: 'code', label: '💻 Código' },
-        ].map(t => (
-          <button key={t.id} className={`tab-btn ${tab === t.id ? 'active' : ''}`} onClick={() => setTab(t.id)}>
-            {t.label}
-          </button>
-        ))}
+      <div className="bg-white rounded-xl border border-slate-200 p-6">
+        <h3 className="font-semibold text-slate-800 mb-4">📁 Estrutura do Projeto Laravel</h3>
+        <CodeViewer code={`app/
+├── Http/
+│   ├── Controllers/Api/
+│   │   ├── AuthController.php
+│   │   ├── VoluntarioController.php
+│   │   ├── PastoralController.php
+│   │   ├── EventoController.php
+│   │   ├── TermoController.php
+│   │   ├── DashboardController.php
+│   │   └── ValidacaoController.php
+│   └── Middleware/
+│       ├── JwtAuthenticate.php
+│       └── SetParoquiaContext.php
+├── Models/
+│   ├── User.php (implements JWTSubject)
+│   ├── Diocese.php
+│   ├── Paroquia.php
+│   ├── Voluntario.php
+│   ├── Pastoral.php
+│   ├── Evento.php
+│   ├── Termo.php
+│   └── AuditoriaLog.php
+├── Services/
+│   ├── TermoService.php
+│   ├── GovBrSignatureService.php
+│   ├── PdfGeneratorService.php
+│   ├── HashService.php
+│   ├── DocumentStorageService.php
+│   └── AuditoriaService.php
+└── Jobs/
+    ├── GerarTermoPdfJob.php
+    └── EnviarNotificacaoJob.php
+
+config/
+├── jwt.php
+└── govbr.php
+
+database/migrations/
+└── create_tables.php
+
+routes/
+└── api.php`} />
       </div>
 
-      {tab === 'structure' && (
-        <div className="card p-6">
-          <h3 className="font-semibold text-slate-800 mb-4">Estrutura do Projeto Laravel</h3>
-          <CodeViewer code={laravelStructure.root} filename="laravel-project-structure" />
-          
-          <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="bg-slate-50 rounded-lg p-4">
-              <h4 className="text-sm font-semibold text-slate-700 mb-2">🎮 Controllers</h4>
-              <ul className="text-xs text-slate-600 space-y-1">
-                <li>• AuthController - JWT Auth</li>
-                <li>• VoluntarioController - CRUD</li>
-                <li>• PastoralController - CRUD</li>
-                <li>• EventoController - CRUD</li>
-                <li>• TermoController - Gestão completa</li>
-                <li>• TermoTemplateController</li>
-                <li>• DashboardController</li>
-                <li>• ValidacaoController</li>
-                <li>• AuditoriaController</li>
-              </ul>
-            </div>
-            <div className="bg-slate-50 rounded-lg p-4">
-              <h4 className="text-sm font-semibold text-slate-700 mb-2">⚙️ Services</h4>
-              <ul className="text-xs text-slate-600 space-y-1">
-                <li>• TermoService - Lógica de termos</li>
-                <li>• GovBrSignatureService - Assinatura</li>
-                <li>• PdfGeneratorService - Geração PDF</li>
-                <li>• DocumentStorageService - Storage</li>
-                <li>• NotificationService - Notificações</li>
-                <li>• AuditoriaService - Auditoria</li>
-                <li>• HashService - Hash SHA-256</li>
-              </ul>
-            </div>
-            <div className="bg-slate-50 rounded-lg p-4">
-              <h4 className="text-sm font-semibold text-slate-700 mb-2">📦 Models</h4>
-              <ul className="text-xs text-slate-600 space-y-1">
-                <li>• User (JWTSubject)</li>
-                <li>• Diocese</li>
-                <li>• Paroquia</li>
-                <li>• Comunidade</li>
-                <li>• Pastoral</li>
-                <li>• Voluntario</li>
-                <li>• Evento</li>
-                <li>• Termo</li>
-                <li>• TermoTemplate</li>
-                <li>• TermoAssinatura</li>
-                <li>• AuditoriaLog</li>
-                <li>• Notificacao</li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {tab === 'code' && (
+      <div className="bg-white rounded-xl border border-slate-200 p-6">
+        <h3 className="font-semibold text-slate-800 mb-4">💻 Código-Fonte</h3>
         <div className="flex gap-4">
           <div className="w-64 flex-shrink-0">
-            <div className="card p-3 sticky top-0">
-              <h4 className="text-xs font-semibold text-slate-500 uppercase mb-2">Arquivos</h4>
-              <div className="space-y-0.5 max-h-[70vh] overflow-y-auto">
-                <FileTreeItem name="routes/" icon="📁" />
-                <FileTreeItem name="api.php" icon="📄" indent={1} onClick={() => setActiveFile('routes/api.php')} active={activeFile === 'routes/api.php'} />
-                <FileTreeItem name="app/Models/" icon="📁" />
-                <FileTreeItem name="Termo.php" icon="📄" indent={1} onClick={() => setActiveFile('Models/Termo.php')} active={activeFile === 'Models/Termo.php'} />
-                <FileTreeItem name="Voluntario.php" icon="📄" indent={1} onClick={() => setActiveFile('Models/Voluntario.php')} active={activeFile === 'Models/Voluntario.php'} />
-                <FileTreeItem name="User.php" icon="📄" indent={1} onClick={() => setActiveFile('Models/User.php')} active={activeFile === 'Models/User.php'} />
-                <FileTreeItem name="Controllers/Api/" icon="📁" />
-                <FileTreeItem name="TermoController.php" icon="📄" indent={1} onClick={() => setActiveFile('TermoController.php')} active={activeFile === 'TermoController.php'} />
-                <FileTreeItem name="AuthController.php" icon="📄" indent={1} onClick={() => setActiveFile('AuthController.php')} active={activeFile === 'AuthController.php'} />
-                <FileTreeItem name="DashboardController.php" icon="📄" indent={1} onClick={() => setActiveFile('DashboardController.php')} active={activeFile === 'DashboardController.php'} />
-                <FileTreeItem name="Services/" icon="📁" />
-                <FileTreeItem name="GovBrSignatureService.php" icon="📄" indent={1} onClick={() => setActiveFile('GovBrSignatureService.php')} active={activeFile === 'GovBrSignatureService.php'} />
-                <FileTreeItem name="TermoService.php" icon="📄" indent={1} onClick={() => setActiveFile('TermoService.php')} active={activeFile === 'TermoService.php'} />
-                <FileTreeItem name="PdfGeneratorService.php" icon="📄" indent={1} onClick={() => setActiveFile('PdfGeneratorService.php')} active={activeFile === 'PdfGeneratorService.php'} />
-                <FileTreeItem name="AuditoriaService.php" icon="📄" indent={1} onClick={() => setActiveFile('AuditoriaService.php')} active={activeFile === 'AuditoriaService.php'} />
-                <FileTreeItem name="HashService.php" icon="📄" indent={1} onClick={() => setActiveFile('HashService.php')} active={activeFile === 'HashService.php'} />
-                <FileTreeItem name="DocumentStorageService.php" icon="📄" indent={1} onClick={() => setActiveFile('DocumentStorageService.php')} active={activeFile === 'DocumentStorageService.php'} />
-                <FileTreeItem name="database/migrations/" icon="📁" />
-                <FileTreeItem name="create_all_tables.php" icon="📄" indent={1} onClick={() => setActiveFile('migrations')} active={activeFile === 'migrations'} />
-                <FileTreeItem name="config/" icon="📁" />
-                <FileTreeItem name="jwt.php" icon="📄" indent={1} onClick={() => setActiveFile('config/jwt.php')} active={activeFile === 'config/jwt.php'} />
-                <FileTreeItem name="govbr.php" icon="📄" indent={1} onClick={() => setActiveFile('config/govbr.php')} active={activeFile === 'config/govbr.php'} />
-                <FileTreeItem name=".env.example" icon="📄" onClick={() => setActiveFile('.env.example')} active={activeFile === '.env.example'} />
-              </div>
+            <div className="space-y-1">
+              {Object.keys(files).map(file => (
+                <button
+                  key={file}
+                  onClick={() => setActiveFile(file)}
+                  className={`w-full text-left px-3 py-2 rounded text-sm ${
+                    activeFile === file ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-50'
+                  }`}
+                >
+                  📄 {file}
+                </button>
+              ))}
             </div>
           </div>
-          <div className="flex-1 min-w-0">
-            {activeFile && files[activeFile] ? (
-              <CodeViewer code={files[activeFile].code} filename={activeFile} language={files[activeFile].lang} />
-            ) : (
-              <div className="card p-12 text-center">
-                <p className="text-slate-400">← Selecione um arquivo para visualizar o código</p>
-              </div>
-            )}
+          <div className="flex-1">
+            <CodeViewer code={files[activeFile]} filename={activeFile} />
           </div>
         </div>
-      )}
+      </div>
     </div>
   );
 }
 
-// ==================== DATABASE PAGE ====================
 function DatabasePage() {
   return (
     <div className="space-y-6">
-      <div className="card p-6">
-        <h3 className="font-semibold text-slate-800 mb-4">🗄️ Migrations - SQL Server</h3>
-        <CodeViewer code={laravelMigrations} filename="database/migrations/create_all_tables.php" language="php" />
-      </div>
-
-      <div className="card p-6">
-        <h3 className="font-semibold text-slate-800 mb-4">🔗 Relacionamentos</h3>
-        <CodeViewer code={`
-dioceses
+      <div className="bg-white rounded-xl border border-slate-200 p-6">
+        <h3 className="font-semibold text-slate-800 mb-4">🗄️ Modelo de Dados</h3>
+        <CodeViewer code={`dioceses
   └── paroquias (diocese_id FK)
         ├── comunidades (paroquia_id FK)
-        ├── pastorais (paroquia_id FK, comunidade_id FK nullable)
-        │     └── voluntarios (pastoral_id FK nullable)
-        ├── voluntarios (paroquia_id FK, comunidade_id FK nullable)
+        ├── pastorais (paroquia_id FK)
+        │     └── voluntarios (pastoral_id FK)
+        ├── voluntarios (paroquia_id FK)
         │     └── termos (voluntario_id FK)
-        ├── eventos (paroquia_id FK, pastoral_id FK nullable)
-        │     └── eventos_voluntarios (evento_id FK, voluntario_id FK)
-        ├── termos (paroquia_id FK, pastoral_id FK nullable, evento_id FK nullable)
+        ├── eventos (paroquia_id FK)
+        │     └── eventos_voluntarios
+        ├── termos (paroquia_id FK)
         │     ├── termo_assinaturas (termo_id FK)
-        │     └── auditoria_logs (documento_id = termo.id)
-        ├── termo_templates (paroquia_id FK nullable)
-        └── users (paroquia_id FK nullable)
-`} />
+        │     └── auditoria_logs (documento_id)
+        └── termo_templates (paroquia_id FK)`} />
       </div>
 
-      <div className="card p-6">
-        <h3 className="font-semibold text-slate-800 mb-4">📊 Índices</h3>
+      <div className="bg-white rounded-xl border border-slate-200 p-6">
+        <h3 className="font-semibold text-slate-800 mb-4">📊 Tabelas Principais</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {[
-            { table: 'termos', indexes: ['paroquia_id', 'voluntario_id', 'status', 'codigo', '(data_fim, status)'] },
-            { table: 'voluntarios', indexes: ['paroquia_id', 'pastoral_id', 'status', 'cpf (unique)'] },
-            { table: 'eventos', indexes: ['paroquia_id', 'status'] },
-            { table: 'auditoria_logs', indexes: ['documento_id', 'acao', 'data_hora'] },
-            { table: 'termo_assinaturas', indexes: ['termo_id', 'status'] },
-            { table: 'notificacoes', indexes: ['destinatario_id', 'lida'] },
-          ].map(t => (
-            <div key={t.table} className="bg-slate-50 rounded-lg p-3">
-              <h4 className="text-xs font-bold text-slate-700 uppercase">{t.table}</h4>
-              <div className="mt-2 space-y-0.5">
-                {t.indexes.map(idx => (
-                  <p key={idx} className="text-xs text-slate-600 font-mono">📌 {idx}</p>
+            { name: 'termos', fields: ['id', 'codigo (unique)', 'tipo', 'voluntario_id', 'pastoral_id', 'evento_id', 'paroquia_id', 'data_inicio', 'data_fim', 'status', 'template_id', 'versao', 'hash_documento', 'hash_documento_assinado', 'data_geracao', 'data_assinatura', 'assinatura_govbr_id', 'documento_url', 'documento_assinado_url'] },
+            { name: 'voluntarios', fields: ['id', 'paroquia_id', 'pastoral_id', 'nome_completo', 'cpf (unique)', 'data_nascimento', 'email', 'telefone', 'data_inicio', 'status'] },
+            { name: 'pastorais', fields: ['id', 'paroquia_id', 'nome', 'descricao', 'coordenador', 'email', 'status'] },
+            { name: 'eventos', fields: ['id', 'paroquia_id', 'nome', 'descricao', 'data_inicial', 'data_final', 'local', 'coordenador', 'status'] },
+            { name: 'auditoria_logs', fields: ['id', 'usuario', 'data_hora', 'ip', 'acao', 'documento_id', 'status_anterior', 'status_novo', 'resultado', 'mensagem'] },
+          ].map(table => (
+            <div key={table.name} className="bg-slate-50 rounded-lg p-4">
+              <h4 className="text-sm font-bold text-slate-700 uppercase mb-2">{table.name}</h4>
+              <div className="space-y-1">
+                {table.fields.map(field => (
+                  <p key={field} className="text-xs text-slate-600 font-mono">{field}</p>
                 ))}
               </div>
             </div>
@@ -581,77 +1025,44 @@ dioceses
   );
 }
 
-// ==================== API PAGE ====================
 function ApiPage() {
   return (
     <div className="space-y-6">
-      <div className="card p-6">
-        <h3 className="font-semibold text-slate-800 mb-4">🌐 Rotas da API REST</h3>
-        <CodeViewer code={laravelRoutes} filename="routes/api.php" language="php" />
-      </div>
-
-      <div className="card p-6">
-        <h3 className="font-semibold text-slate-800 mb-4">📋 Endpoints Detalhados</h3>
+      <div className="bg-white rounded-xl border border-slate-200 p-6">
+        <h3 className="font-semibold text-slate-800 mb-4">🌐 Endpoints da API REST</h3>
         <div className="space-y-4">
           {[
             { group: 'Autenticação', endpoints: [
-              { method: 'POST', path: '/api/v1/auth/login', desc: 'Login - retorna JWT token', auth: false },
-              { method: 'POST', path: '/api/v1/auth/logout', desc: 'Logout - invalida token', auth: true },
-              { method: 'POST', path: '/api/v1/auth/refresh', desc: 'Refresh JWT token', auth: true },
-              { method: 'GET', path: '/api/v1/auth/me', desc: 'Dados do usuário autenticado', auth: true },
-            ]},
-            { group: 'Voluntários', endpoints: [
-              { method: 'GET', path: '/api/v1/voluntarios', desc: 'Listar (com filtros)', auth: true },
-              { method: 'POST', path: '/api/v1/voluntarios', desc: 'Criar voluntário', auth: true },
-              { method: 'GET', path: '/api/v1/voluntarios/{id}', desc: 'Detalhar voluntário', auth: true },
-              { method: 'PUT', path: '/api/v1/voluntarios/{id}', desc: 'Atualizar voluntário', auth: true },
-              { method: 'DELETE', path: '/api/v1/voluntarios/{id}', desc: 'Remover (soft delete)', auth: true },
-              { method: 'GET', path: '/api/v1/voluntarios/{id}/termos', desc: 'Termos do voluntário', auth: true },
-            ]},
-            { group: 'Pastorais', endpoints: [
-              { method: 'GET', path: '/api/v1/pastorais', desc: 'Listar pastorais', auth: true },
-              { method: 'POST', path: '/api/v1/pastorais', desc: 'Criar pastoral', auth: true },
-              { method: 'GET', path: '/api/v1/pastorais/{id}', desc: 'Detalhar pastoral', auth: true },
-              { method: 'PUT', path: '/api/v1/pastorais/{id}', desc: 'Atualizar pastoral', auth: true },
-              { method: 'DELETE', path: '/api/v1/pastorais/{id}', desc: 'Remover pastoral', auth: true },
-              { method: 'GET', path: '/api/v1/pastorais/{id}/voluntarios', desc: 'Voluntários da pastoral', auth: true },
-            ]},
-            { group: 'Eventos', endpoints: [
-              { method: 'GET', path: '/api/v1/eventos', desc: 'Listar eventos', auth: true },
-              { method: 'POST', path: '/api/v1/eventos', desc: 'Criar evento', auth: true },
-              { method: 'GET', path: '/api/v1/eventos/{id}', desc: 'Detalhar evento', auth: true },
-              { method: 'PUT', path: '/api/v1/eventos/{id}', desc: 'Atualizar evento', auth: true },
-              { method: 'DELETE', path: '/api/v1/eventos/{id}', desc: 'Remover evento', auth: true },
-              { method: 'POST', path: '/api/v1/eventos/{id}/voluntarios', desc: 'Vincular voluntário', auth: true },
+              { method: 'POST', path: '/api/v1/auth/login', desc: 'Login - retorna JWT', auth: false },
+              { method: 'POST', path: '/api/v1/auth/logout', desc: 'Logout', auth: true },
+              { method: 'GET', path: '/api/v1/auth/me', desc: 'Dados do usuário', auth: true },
             ]},
             { group: 'Termos', endpoints: [
-              { method: 'GET', path: '/api/v1/termos', desc: 'Listar termos (filtros)', auth: true },
+              { method: 'GET', path: '/api/v1/termos', desc: 'Listar termos', auth: true },
               { method: 'POST', path: '/api/v1/termos/anual', desc: 'Criar termo anual', auth: true },
-              { method: 'POST', path: '/api/v1/termos/evento', desc: 'Criar termo de evento', auth: true },
+              { method: 'POST', path: '/api/v1/termos/evento', desc: 'Criar termo evento', auth: true },
               { method: 'GET', path: '/api/v1/termos/{id}', desc: 'Detalhar termo', auth: true },
               { method: 'POST', path: '/api/v1/termos/{id}/gerar', desc: 'Gerar PDF', auth: true },
               { method: 'POST', path: '/api/v1/termos/{id}/solicitar-assinatura', desc: 'Solicitar assinatura gov.br', auth: true },
-              { method: 'GET', path: '/api/v1/termos/{id}/assinatura/status', desc: 'Status da assinatura', auth: true },
+              { method: 'GET', path: '/api/v1/termos/{id}/assinatura/status', desc: 'Status assinatura', auth: true },
               { method: 'POST', path: '/api/v1/termos/{id}/cancelar', desc: 'Cancelar termo', auth: true },
               { method: 'POST', path: '/api/v1/termos/{id}/renovar', desc: 'Renovar termo', auth: true },
               { method: 'GET', path: '/api/v1/termos/{id}/pdf', desc: 'Download PDF', auth: true },
-              { method: 'GET', path: '/api/v1/termos/{id}/auditoria', desc: 'Auditoria do termo', auth: true },
-              { method: 'GET', path: '/api/v1/termos/assinatura/callback', desc: 'Callback gov.br OAuth', auth: false },
             ]},
-            { group: 'Templates', endpoints: [
-              { method: 'GET', path: '/api/v1/templates', desc: 'Listar templates', auth: true },
-              { method: 'POST', path: '/api/v1/templates', desc: 'Criar template', auth: true },
-              { method: 'GET', path: '/api/v1/templates/{id}', desc: 'Detalhar template', auth: true },
-              { method: 'PUT', path: '/api/v1/templates/{id}', desc: 'Atualizar template', auth: true },
-              { method: 'POST', path: '/api/v1/templates/{id}/ativar', desc: 'Ativar template', auth: true },
-              { method: 'POST', path: '/api/v1/templates/{id}/desativar', desc: 'Desativar template', auth: true },
+            { group: 'CRUDs', endpoints: [
+              { method: 'GET', path: '/api/v1/voluntarios', desc: 'Listar voluntários', auth: true },
+              { method: 'POST', path: '/api/v1/voluntarios', desc: 'Criar voluntário', auth: true },
+              { method: 'GET', path: '/api/v1/voluntarios/{id}', desc: 'Detalhar voluntário', auth: true },
+              { method: 'PUT', path: '/api/v1/voluntarios/{id}', desc: 'Atualizar voluntário', auth: true },
+              { method: 'DELETE', path: '/api/v1/voluntarios/{id}', desc: 'Remover voluntário', auth: true },
+              { method: 'GET', path: '/api/v1/pastorais', desc: 'Listar pastorais', auth: true },
+              { method: 'POST', path: '/api/v1/pastorais', desc: 'Criar pastoral', auth: true },
+              { method: 'GET', path: '/api/v1/eventos', desc: 'Listar eventos', auth: true },
+              { method: 'POST', path: '/api/v1/eventos', desc: 'Criar evento', auth: true },
             ]},
-            { group: 'Validação (Pública)', endpoints: [
-              { method: 'GET', path: '/api/v1/validacao/{codigo}', desc: 'Validar termo por código', auth: false },
-            ]},
-            { group: 'Dashboard & Auditoria', endpoints: [
-              { method: 'GET', path: '/api/v1/dashboard', desc: 'Estatísticas do dashboard', auth: true },
-              { method: 'GET', path: '/api/v1/auditoria', desc: 'Logs de auditoria', auth: true },
+            { group: 'Público', endpoints: [
+              { method: 'GET', path: '/api/v1/validacao/{codigo}', desc: 'Validar termo', auth: false },
+              { method: 'GET', path: '/api/v1/dashboard', desc: 'Estatísticas', auth: true },
             ]},
           ].map(group => (
             <div key={group.group}>
@@ -664,7 +1075,7 @@ function ApiPage() {
                     }`}>{ep.method}</span>
                     <span className="font-mono text-slate-700 flex-1">{ep.path}</span>
                     <span className="text-slate-400">{ep.desc}</span>
-                    {ep.auth && <span className="badge bg-amber-100 text-amber-700">🔒 JWT</span>}
+                    {ep.auth && <span className="px-2 py-0.5 bg-amber-100 text-amber-700 rounded text-[10px]">🔒 JWT</span>}
                   </div>
                 ))}
               </div>
@@ -676,32 +1087,29 @@ function ApiPage() {
   );
 }
 
-// ==================== GOV.BR PAGE ====================
 function GovBrPage() {
   return (
     <div className="space-y-6">
-      <div className="card p-6 border-blue-200 bg-blue-50">
+      <div className="bg-blue-50 border border-blue-200 rounded-xl p-6">
         <h3 className="text-lg font-semibold text-blue-800 mb-2">🔐 Integração Assinatura Eletrônica gov.br</h3>
         <p className="text-sm text-blue-700">
           Baseado na documentação oficial: <a href="https://manual-integracao-assinatura-eletronica.servicos.gov.br/" target="_blank" className="underline">manual-integracao-assinatura-eletronica.servicos.gov.br</a>
         </p>
       </div>
 
-      <div className="card p-6">
-        <h3 className="font-semibold text-slate-800 mb-4">📋 Fluxo Oficial de Integração</h3>
+      <div className="bg-white rounded-xl border border-slate-200 p-6">
+        <h3 className="font-semibold text-slate-800 mb-4">📋 Fluxo Oficial</h3>
         <div className="space-y-3">
           {[
-            { step: 1, title: 'Credenciamento', desc: 'Gestor Público solicita credenciais via Serviço de Integração aos Produtos do Ecossistema da Conta Digital GOV.BR' },
-            { step: 2, title: 'Autenticação OAuth 2.0', desc: 'Redirecionar usuário para: cas.iti.br/oauth2.0/authorize com scope=sign e conta Prata/Ouro' },
-            { step: 3, title: 'Authorization Code', desc: 'gov.br retorna código de autorização via redirect_uri cadastrado' },
-            { step: 4, title: 'Access Token', desc: 'POST cas.iti.br/oauth2.0/token trocando code por access_token' },
-            { step: 5, title: 'Certificado Público', desc: 'GET assinatura-api.iti.br/externo/v2/certificadoPublico com Bearer token' },
-            { step: 6, title: 'Assinatura PKCS#7', desc: 'POST assinatura-api.iti.br/externo/v2/assinarPKCS7 com hash SHA-256 do documento' },
-            { step: 7, title: 'Incorporar no PDF', desc: 'Pacote PKCS#7 retornado é incorporado ao PDF como assinatura digital' },
-            { step: 8, title: 'Validação', desc: 'Documento pode ser validado em validar.iti.gov.br (produção) ou validar.staging.iti.br (homologação)' },
+            { step: 1, title: 'Credenciamento', desc: 'Solicitar credenciais via Serviço de Integração gov.br' },
+            { step: 2, title: 'OAuth 2.0', desc: 'Redirecionar para: cas.iti.br/oauth2.0/authorize (conta Prata/Ouro)' },
+            { step: 3, title: 'Authorization Code', desc: 'gov.br retorna código via redirect_uri' },
+            { step: 4, title: 'Access Token', desc: 'POST cas.iti.br/oauth2.0/token' },
+            { step: 5, title: 'Assinatura PKCS#7', desc: 'POST assinatura-api.iti.br/externo/v2/assinarPKCS7 com hash SHA-256' },
+            { step: 6, title: 'Validação', desc: 'Documento validável em validar.iti.gov.br' },
           ].map(s => (
             <div key={s.step} className="flex gap-4 items-start">
-              <div className="w-8 h-8 bg-primary-600 text-white rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0">{s.step}</div>
+              <div className="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0">{s.step}</div>
               <div>
                 <p className="text-sm font-semibold text-slate-800">{s.title}</p>
                 <p className="text-xs text-slate-600">{s.desc}</p>
@@ -711,174 +1119,133 @@ function GovBrPage() {
         </div>
       </div>
 
-      <div className="card p-6">
-        <h3 className="font-semibold text-slate-800 mb-4">💻 GovBrSignatureService (Laravel)</h3>
-        <CodeViewer code={laravelServices.govBrSignatureService} filename="app/Services/GovBrSignatureService.php" language="php" />
+      <div className="bg-white rounded-xl border border-slate-200 p-6">
+        <h3 className="font-semibold text-slate-800 mb-4">💻 GovBrSignatureService</h3>
+        <CodeViewer code={`<?php
+class GovBrSignatureService
+{
+    public function criarSolicitacaoAssinatura($termo): array
+    {
+        $state = Str::uuid()->toString();
+        
+        cache()->put("signature:{$state}", [
+            'termo_id' => $termo->id,
+            'hash' => $termo->hash_documento,
+        ], now()->addMinutes(30));
+
+        $authUrl = config('govbr.auth_url') . '/oauth2.0/authorize?' . http_build_query([
+            'response_type' => 'code',
+            'client_id' => config('govbr.client_id'),
+            'redirect_uri' => config('govbr.redirect_uri'),
+            'scope' => 'sign',
+            'state' => $state,
+        ]);
+
+        return ['auth_url' => $authUrl, 'signature_id' => $state];
+    }
+
+    public function trocarCodePorToken(string $code): array
+    {
+        $response = Http::asForm()->post(config('govbr.auth_url') . '/oauth2.0/token', [
+            'grant_type' => 'authorization_code',
+            'code' => $code,
+            'redirect_uri' => config('govbr.redirect_uri'),
+            'client_id' => config('govbr.client_id'),
+            'client_secret' => config('govbr.client_secret'),
+        ]);
+
+        return $response->json();
+    }
+
+    public function obterAssinaturaPKCS7(string $accessToken, string $hash): string
+    {
+        $response = Http::withToken($accessToken)
+            ->post(config('govbr.api_url') . '/externo/v2/assinarPKCS7', [
+                'digestAlgorithm' => 'SHA-256',
+                'hash' => $hash,
+            ]);
+
+        return $response->json()['signedHash'];
+    }
+}`} />
       </div>
 
-      <div className="card p-6">
-        <h3 className="font-semibold text-slate-800 mb-4">🔧 Configuração</h3>
-        <CodeViewer code={laravelConfig.govbr} filename="config/govbr.php" language="php" />
-      </div>
-
-      <div className="card p-6 bg-yellow-50 border-yellow-200">
+      <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-6">
         <h3 className="font-semibold text-yellow-800 mb-2">⚠️ Requisitos Importantes</h3>
         <ul className="text-sm text-yellow-700 space-y-2">
-          <li>• A API de Assinatura Eletrônica do gov.br é destinada a <strong>órgãos públicos</strong>.</li>
-          <li>• Para uso por paróquias, é necessário credenciamento via <strong>Diocese/Cúria</strong> com domínio oficial.</li>
-          <li>• O usuário precisa de conta gov.br nível <strong>Prata ou Ouro</strong>.</li>
-          <li>• A aplicação deve estar hospedada em domínio oficial (gov.br, edu.br, etc.) para produção.</li>
-          <li>• Em homologação, usar ambiente staging: sso.staging.acesso.gov.br</li>
-          <li>• A arquitetura está preparada para integração quando credenciais forem obtidas.</li>
+          <li>• API destinada a <strong>órgãos públicos</strong></li>
+          <li>• Necessário credenciamento via Diocese/Cúria com domínio oficial</li>
+          <li>• Usuário precisa conta gov.br nível <strong>Prata ou Ouro</strong></li>
+          <li>• Aplicação em domínio oficial (gov.br, edu.br, etc.) para produção</li>
         </ul>
-      </div>
-
-      <div className="card p-6">
-        <h3 className="font-semibold text-slate-800 mb-4">🔄 Escopos Disponíveis</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="bg-slate-50 rounded-lg p-4">
-            <h4 className="text-sm font-bold text-slate-700">sign</h4>
-            <p className="text-xs text-slate-600 mt-1">Token de uso único. Permite assinar um único hash. Ideal para assinatura individual de documentos.</p>
-          </div>
-          <div className="bg-slate-50 rounded-lg p-4">
-            <h4 className="text-sm font-bold text-slate-700">signature_session</h4>
-            <p className="text-xs text-slate-600 mt-1">Token reutilizável. Permite múltiplas assinaturas em lote durante a validade do token.</p>
-          </div>
-        </div>
       </div>
     </div>
   );
 }
 
-// ==================== SECURITY PAGE ====================
 function SecurityPage() {
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="card p-6">
+        <div className="bg-white rounded-xl border border-slate-200 p-6">
           <h3 className="font-semibold text-slate-800 mb-4">🔒 Segurança</h3>
           <ul className="text-sm text-slate-700 space-y-2">
-            <li className="flex items-start gap-2"><span className="text-green-500">✓</span> Autenticação JWT (tymon/jwt-auth)</li>
-            <li className="flex items-start gap-2"><span className="text-green-500">✓</span> Controle por perfil (RBAC) com Guards</li>
-            <li className="flex items-start gap-2"><span className="text-green-500">✓</span> Isolamento por paróquia (multi-tenant)</li>
-            <li className="flex items-start gap-2"><span className="text-green-500">✓</span> Middleware SetParoquiaContext</li>
-            <li className="flex items-start gap-2"><span className="text-green-500">✓</span> Criptografia de dados sensíveis</li>
-            <li className="flex items-start gap-2"><span className="text-green-500">✓</span> URLs temporárias para documentos</li>
-            <li className="flex items-start gap-2"><span className="text-green-500">✓</span> Hash SHA-256 para integridade</li>
-            <li className="flex items-start gap-2"><span className="text-green-500">✓</span> Logs de auditoria imutáveis</li>
-            <li className="flex items-start gap-2"><span className="text-green-500">✓</span> Validação de uploads</li>
-            <li className="flex items-start gap-2"><span className="text-green-500">✓</span> Soft deletes para rastreabilidade</li>
-            <li className="flex items-start gap-2"><span className="text-green-500">✓</span> CORS configurado</li>
-            <li className="flex items-start gap-2"><span className="text-green-500">✓</span> Rate limiting</li>
+            <li>✓ Autenticação JWT (tymon/jwt-auth)</li>
+            <li>✓ Controle por perfil (RBAC)</li>
+            <li>✓ Isolamento por paróquia (multi-tenant)</li>
+            <li>✓ Middleware SetParoquiaContext</li>
+            <li>✓ Hash SHA-256 para integridade</li>
+            <li>✓ Logs de auditoria imutáveis</li>
+            <li>✓ URLs temporárias para documentos</li>
+            <li>✓ Soft deletes para rastreabilidade</li>
           </ul>
         </div>
-        <div className="card p-6">
-          <h3 className="font-semibold text-slate-800 mb-4">📋 LGPD - Lei 13.709/2018</h3>
+        <div className="bg-white rounded-xl border border-slate-200 p-6">
+          <h3 className="font-semibold text-slate-800 mb-4">📋 LGPD</h3>
           <ul className="text-sm text-slate-700 space-y-2">
-            <li className="flex items-start gap-2"><span className="text-green-500">✓</span> Minimização de dados</li>
-            <li className="flex items-start gap-2"><span className="text-green-500">✓</span> Finalidade definida e transparente</li>
-            <li className="flex items-start gap-2"><span className="text-green-500">✓</span> Controle de acesso por perfil</li>
-            <li className="flex items-start gap-2"><span className="text-green-500">✓</span> Política de retenção documental</li>
-            <li className="flex items-start gap-2"><span className="text-green-500">✓</span> Histórico completo de operações</li>
-            <li className="flex items-start gap-2"><span className="text-green-500">✓</span> Consentimento para uso de imagem</li>
-            <li className="flex items-start gap-2"><span className="text-green-500">✓</span> Eliminação quando juridicamente aplicável</li>
-            <li className="flex items-start gap-2"><span className="text-green-500">✓</span> Registro de tratamento (Art. 37)</li>
-            <li className="flex items-start gap-2"><span className="text-green-500">✓</span> Dados sensíveis protegidos</li>
-            <li className="flex items-start gap-2"><span className="text-green-500">✓</span> CPF formatado e validado</li>
-            <li className="flex items-start gap-2"><span className="text-green-500">✓</span> Auditoria de acesso a documentos</li>
-            <li className="flex items-start gap-2"><span className="text-green-500">✓</span> Cláusula LGPD nos templates</li>
+            <li>✓ Minimização de dados</li>
+            <li>✓ Finalidade transparente</li>
+            <li>✓ Controle de acesso por perfil</li>
+            <li>✓ Política de retenção</li>
+            <li>✓ Histórico completo</li>
+            <li>✓ Consentimento para imagem</li>
+            <li>✓ Eliminação quando aplicável</li>
+            <li>✓ Cláusula LGPD nos templates</li>
           </ul>
         </div>
       </div>
 
-      <div className="card p-6">
-        <h3 className="font-semibold text-slate-800 mb-4">🔐 Fluxo de Autenticação JWT</h3>
-        <CodeViewer code={`
-1. POST /api/v1/auth/login { email, password }
-   → Valida credenciais
-   → Gera JWT com claims: { sub, perfil, paroquia_id, nome }
-   → Retorna: { token, token_type, expires_in, user }
-
-2. Requests subsequentes:
-   → Header: Authorization: Bearer {token}
-   → JwtAuthenticate middleware valida token
-   → SetParoquiaContext middleware define contexto
-
-3. Refresh:
-   → POST /api/v1/auth/refresh
-   → Retorna novo token
-   → TTL: 60 min, Refresh TTL: 14 dias
-
-4. Logout:
-   → POST /api/v1/auth/logout
-   → Token é colocado na blacklist
-`} />
-      </div>
-
-      <div className="card p-6">
-        <h3 className="font-semibold text-slate-800 mb-4">🛡️ Middleware de Controle de Acesso</h3>
-        <CodeViewer code={`<?php
-// app/Http/Middleware/CheckPerfil.php
-namespace App\\Http\\Middleware;
-
-use Closure;
-use Illuminate\\Http\\Request;
-use Illuminate\\Support\\Facades\\Auth;
-
-class CheckPerfil
-{
-    public function handle(Request $request, Closure $next, ...$perfis)
-    {
-        $user = Auth::user();
-
-        if (!$user || !$user->hasAnyPerfil($perfis)) {
-            abort(403, 'Acesso negado. Perfil não autorizado.');
-        }
-
-        return $next($request);
-    }
-}
-
-// app/Http/Middleware/SetParoquiaContext.php
-namespace App\\Http\\Middleware;
-
-use Closure;
-use Illuminate\\Http\\Request;
-use Illuminate\\Support\\Facades\\Auth;
-
-class SetParoquiaContext
-{
-    public function handle(Request $request, Closure $next)
-    {
-        $user = Auth::user();
-
-        if ($user->perfil === 'ADMIN_DIOCESE') {
-            // Admin de diocese pode acessar qualquer paróquia
-            $paroquiaId = $request->header('X-Paroquia-Id') ?? $user->paroquia_id;
-        } else {
-            // Demais perfis são limitados à sua paróquia
-            $paroquiaId = $user->paroquia_id;
-        }
-
-        $request->attributes->set('paroquia_id', $paroquiaId);
-
-        return $next($request);
-    }
-}`} filename="app/Http/Middleware/" language="php" />
+      <div className="bg-white rounded-xl border border-slate-200 p-6">
+        <h3 className="font-semibold text-slate-800 mb-4">👥 Perfis de Usuário</h3>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          {[
+            { perfil: 'ADMIN_DIOCESE', desc: 'Acesso total' },
+            { perfil: 'ADMIN_PAROQUIA', desc: 'Administra paróquia' },
+            { perfil: 'COORDENADOR_PASTORAL', desc: 'Gerencia pastoral' },
+            { perfil: 'RESPONSAVEL_EVENTO', desc: 'Gerencia eventos' },
+            { perfil: 'SECRETARIA', desc: 'Operações admin' },
+            { perfil: 'VOLUNTARIO', desc: 'Acesso próprio' },
+            { perfil: 'AUDITOR', desc: 'Consulta logs' },
+          ].map(p => (
+            <div key={p.perfil} className="bg-slate-50 rounded-lg p-3">
+              <p className="text-xs font-bold text-slate-700">{p.perfil}</p>
+              <p className="text-[10px] text-slate-500 mt-1">{p.desc}</p>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
 }
 
-// ==================== INSTALL PAGE ====================
 function InstallPage() {
   return (
     <div className="space-y-6">
-      <div className="card p-6">
-        <h3 className="font-semibold text-slate-800 mb-4">⚙️ Instalação do Backend (Laravel)</h3>
-        <CodeViewer code={`# 1. Clonar o repositório
-git clone https://github.com/paroquia/voluntariado-paroquial-api.git
-cd voluntariado-paroquial-api
+      <div className="bg-white rounded-xl border border-slate-200 p-6">
+        <h3 className="font-semibold text-slate-800 mb-4">⚙️ Instalação Backend (Laravel)</h3>
+        <CodeViewer code={`# 1. Clonar repositório
+git clone https://github.com/paroquia/voluntariado-api.git
+cd voluntariado-api
 
 # 2. Instalar dependências
 composer install
@@ -886,140 +1253,87 @@ composer install
 # 3. Configurar ambiente
 cp .env.example .env
 php artisan key:generate
-
-# 4. Configurar banco de dados (SQL Server)
-# Editar .env com credenciais do SQL Server
-
-# 5. Configurar JWT
 php artisan jwt:secret
 
-# 6. Executar migrations
+# 4. Configurar SQL Server no .env
+
+# 5. Executar migrations
 php artisan migrate
 
-# 7. Criar seeders (opcional)
-php artisan db:seed
-
-# 8. Iniciar servidor
+# 6. Iniciar servidor
 php artisan serve
 
-# 9. Iniciar queue worker (para jobs)
-php artisan queue:work`} filename="terminal" />
+# 7. Queue worker (jobs assíncronos)
+php artisan queue:work`} />
       </div>
 
-      <div className="card p-6">
-        <h3 className="font-semibold text-slate-800 mb-4">⚙️ Instalação do Frontend (Angular)</h3>
-        <CodeViewer code={`# 1. Instalar Angular CLI (se ainda não tiver)
+      <div className="bg-white rounded-xl border border-slate-200 p-6">
+        <h3 className="font-semibold text-slate-800 mb-4">⚙️ Instalação Frontend (Angular)</h3>
+        <CodeViewer code={`# 1. Instalar Angular CLI
 npm install -g @angular/cli
 
-# 2. Clonar o repositório
-git clone https://github.com/paroquia/voluntariado-paroquial-frontend.git
-cd voluntariado-paroquial-frontend
+# 2. Clonar repositório
+git clone https://github.com/paroquia/voluntariado-frontend.git
+cd voluntariado-frontend
 
 # 3. Instalar dependências
 npm install
 
-# 4. Configurar ambiente
-# Editar src/environments/environment.ts com URL da API
+# 4. Configurar environment.ts com URL da API
 
-# 5. Iniciar servidor de desenvolvimento
+# 5. Iniciar desenvolvimento
 ng serve
 
-# 6. Acessar em http://localhost:4200
+# 6. Acessar http://localhost:4200
 
-# Build para produção
-ng build --configuration production`} filename="terminal" />
+# Build produção
+ng build --configuration production`} />
       </div>
 
-      <div className="card p-6">
-        <h3 className="font-semibold text-slate-800 mb-4">📦 Dependências do Backend</h3>
-        <CodeViewer code={`// composer.json - dependências principais
-{
-    "require": {
-        "php": "^8.2",
-        "laravel/framework": "^11.0",
-        "tymon/jwt-auth": "^2.0",
-        "barryvdh/laravel-dompdf": "^2.0",
-        "league/flysystem-aws-s3-v3": "^3.0",
-        "azure-oss/storage-blob": "^1.0",
-        "guzzlehttp/guzzle": "^7.0"
-    },
-    "require-dev": {
-        "fakerphp/faker": "^1.23",
-        "laravel/pint": "^1.0",
-        "mockery/mockery": "^1.6",
-        "phpunit/phpunit": "^11.0"
-    }
-}`} filename="composer.json" />
-      </div>
-
-      <div className="card p-6">
-        <h3 className="font-semibold text-slate-800 mb-4">📦 Dependências do Frontend</h3>
-        <CodeViewer code={`// package.json - dependências principais
-{
-    "dependencies": {
-        "@angular/animations": "^17.0.0",
-        "@angular/common": "^17.0.0",
-        "@angular/compiler": "^17.0.0",
-        "@angular/core": "^17.0.0",
-        "@angular/forms": "^17.0.0",
-        "@angular/platform-browser": "^17.0.0",
-        "@angular/platform-browser-dynamic": "^17.0.0",
-        "@angular/router": "^17.0.0",
-        "rxjs": "~7.8.0",
-        "tslib": "^2.3.0",
-        "zone.js": "~0.14.0"
-    },
-    "devDependencies": {
-        "@angular-devkit/build-angular": "^17.0.0",
-        "@angular/cli": "^17.0.0",
-        "@angular/compiler-cli": "^17.0.0",
-        "typescript": "~5.2.0",
-        "tailwindcss": "^3.4.0"
-    }
-}`} filename="package.json" />
-      </div>
-
-      <div className="card p-6">
-        <h3 className="font-semibold text-slate-800 mb-4">🚀 Deploy</h3>
+      <div className="bg-white rounded-xl border border-slate-200 p-6">
+        <h3 className="font-semibold text-slate-800 mb-4">📦 Dependências</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="bg-slate-50 rounded-lg p-4">
-            <h4 className="text-sm font-bold text-slate-700 mb-2">Backend</h4>
-            <ul className="text-xs text-slate-600 space-y-1">
-              <li>• PHP 8.2+ com extensões necessárias</li>
-              <li>• SQL Server 2019+</li>
-              <li>• Nginx/Apache com PHP-FPM</li>
-              <li>• Supervisor para queue workers</li>
-              <li>• Cron para jobs agendados</li>
-              <li>• SSL/TLS obrigatório</li>
-            </ul>
+          <div>
+            <h4 className="text-sm font-bold text-slate-700 mb-2">Backend (composer.json)</h4>
+            <CodeViewer code={`{
+  "require": {
+    "php": "^8.2",
+    "laravel/framework": "^11.0",
+    "tymon/jwt-auth": "^2.0",
+    "barryvdh/laravel-dompdf": "^2.0",
+    "guzzlehttp/guzzle": "^7.0"
+  }
+}`} />
           </div>
-          <div className="bg-slate-50 rounded-lg p-4">
-            <h4 className="text-sm font-bold text-slate-700 mb-2">Frontend</h4>
-            <ul className="text-xs text-slate-600 space-y-1">
-              <li>• Node.js 18+ para build</li>
-              <li>• Nginx para servir arquivos estáticos</li>
-              <li>• CDN para assets</li>
-              <li>• Service Worker (PWA opcional)</li>
-              <li>• SSL/TLS obrigatório</li>
-            </ul>
+          <div>
+            <h4 className="text-sm font-bold text-slate-700 mb-2">Frontend (package.json)</h4>
+            <CodeViewer code={`{
+  "dependencies": {
+    "@angular/core": "^17.0.0",
+    "@angular/router": "^17.0.0",
+    "@angular/forms": "^17.0.0",
+    "rxjs": "~7.8.0"
+  },
+  "devDependencies": {
+    "@angular/cli": "^17.0.0",
+    "typescript": "~5.2.0"
+  }
+}`} />
           </div>
         </div>
       </div>
 
-      <div className="card p-6 bg-green-50 border-green-200">
-        <h3 className="font-semibold text-green-800 mb-2">✅ Checklist de Produção</h3>
+      <div className="bg-green-50 border border-green-200 rounded-xl p-6">
+        <h3 className="font-semibold text-green-800 mb-2">✅ Checklist Produção</h3>
         <ul className="text-sm text-green-700 space-y-1">
           <li>☐ Variáveis de ambiente configuradas</li>
-          <li>☐ JWT_SECRET gerado e seguro</li>
-          <li>☐ APP_DEBUG=false em produção</li>
-          <li>☐ CORS configurado para domínio do frontend</li>
-          <li>☐ SSL/TLS ativo em ambos os serviços</li>
-          <li>☐ Credenciais gov.br obtidas e configuradas</li>
-          <li>☐ Storage configurado (S3/Azure/Local)</li>
-          <li>☐ Backup automático do banco de dados</li>
-          <li>☐ Monitoramento de logs configurado</li>
-          <li>☐ Rate limiting ativo</li>
-          <li>☐ Política de retenção documental definida</li>
+          <li>☐ JWT_SECRET seguro</li>
+          <li>☐ APP_DEBUG=false</li>
+          <li>☐ CORS configurado</li>
+          <li>☐ SSL/TLS ativo</li>
+          <li>☐ Credenciais gov.br obtidas</li>
+          <li>☐ Backup automático</li>
+          <li>☐ Monitoramento de logs</li>
         </ul>
       </div>
     </div>
